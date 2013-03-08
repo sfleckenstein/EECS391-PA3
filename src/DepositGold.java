@@ -4,18 +4,19 @@ import edu.cwru.sepia.action.DirectedAction;
 import edu.cwru.sepia.util.Direction;
 
 
-public class GatherGold extends Act {
+public class DepositGold extends Act {
 
 	private int amount;
-	private Direction directionToGold;
+	private Direction directionToTH;
 	
-	public GatherGold(int amount, Direction dirToGold) {
+	public DepositGold(int amount, Direction dirToTH) {
 		this.amount = amount;
-		this.directionToGold = dirToGold;
+		this.directionToTH = dirToTH;
 	}
 	
 	@Override
 	public Action act(int peasantId) {
-		return new DirectedAction(peasantId, ActionType.PRIMITIVEGATHER, directionToGold);
+		return new DirectedAction(peasantId, ActionType.PRIMITIVEDEPOSIT, directionToTH);
 	}
+
 }
