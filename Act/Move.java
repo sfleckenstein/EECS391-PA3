@@ -8,13 +8,17 @@ public class Move extends Act {
 	
 	private Direction direction;
 	
-	public Move(Direction dir) {
-		this.direction = dir;
+	public Move(Direction direction) {
+		this.direction = direction;
 	}
 
 	@Override
 	public Action act(int peasantId) {
 		return new DirectedAction(peasantId, ActionType.PRIMITIVEMOVE, direction);
+	}
+	
+	public Direction getDirection() {
+		return direction;
 	}
 
 }

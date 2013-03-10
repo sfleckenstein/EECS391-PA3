@@ -7,16 +7,16 @@ import edu.cwru.sepia.util.Direction;
 public class DepositGold extends Act {
 
 	private int amount;
-	private Direction directionToTH;
+	private Direction directionToTownHall;
 	
 	public DepositGold(int amount, Direction dirToTH) {
 		this.amount = amount;
-		this.directionToTH = dirToTH;
+		this.directionToTownHall = dirToTH;
 	}
 	
 	@Override
 	public Action act(int peasantId) {
-		return new DirectedAction(peasantId, ActionType.PRIMITIVEDEPOSIT, directionToTH);
+		return new DirectedAction(peasantId, ActionType.PRIMITIVEDEPOSIT, directionToTownHall);
 	}
 
 }
