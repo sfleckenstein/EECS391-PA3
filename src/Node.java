@@ -1,12 +1,10 @@
-import edu.cwru.sepia.environment.model.state.Unit.UnitView;
-import edu.cwru.sepia.util.Direction;
+import edu.cwru.sepia.environment.model.state.State.StateView;
 
 
-
-public class Node {
+public class Node implements Comparable<Object>{
 	
+	private StateView state;
 	private Node parent;
-//	private ArrayList<Node> children = new ArrayList<Node>();
 	private Act toState;
 	private int costToNode;
 	private int peasantX;
@@ -15,15 +13,19 @@ public class Node {
 	//TODO figure out how to represent literals
 	//possibly another abstract class
 	//private ArrayList<Literal> stateLits; 
-	
+
 	/**
 	 * 
+	 * @param state - The StateView of the node
 	 * @param parent - Parent node
-	 * @param toState - The action used to get to this node.
-	 * @param costToNode - The total cost to get to this node.
-	 * @param peasant - Info on the peasant.
+	 * @param toState - The Act to get to this node
+	 * @param costToNode - The total cost to get to this node
+	 * @param costToGoal - Estimated cost to goal
+	 * @param peasantX - Peasant's x coordinate
+	 * @param peasantY - Peasant's y coordinate
 	 */
-	public Node(Node parent, Act toState, int costToNode, int costToGoal, int peasantX, int peasantY){
+	public Node(StateView state, Node parent, Act toState, int costToNode, int costToGoal, int peasantX, int peasantY){
+		this.state = state;
 		this.parent = parent;
 //		this.children = children;
 		this.toState = toState;
@@ -31,6 +33,10 @@ public class Node {
 		this.costToGoal = costToGoal;
 		this.peasantX = peasantX;
 		this.peasantY = peasantY;
+	}
+	
+	public StateView getState() {
+		return state;
 	}
 	
 	public Node getParentNode() {
@@ -63,6 +69,18 @@ public class Node {
 	
 	public Act getToState() {
 		return toState;
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		Node n = (Node)o;
+		if(this.costToNode + this.costToNode < n.costToNode + n.costToNode) {
+			return -1;
+		} else if(this.costToNode + this.costToNode == n.costToNode + n.costToNode) {
+			return 0;
+		} else {
+			return 1;
+		}
 	}
 
 }
