@@ -1,3 +1,4 @@
+import java.awt.Point;
 import java.util.ArrayList;
 
 import edu.cwru.sepia.environment.model.state.State.StateView;
@@ -10,6 +11,7 @@ public class Node implements Comparable<Object>{
 	private Act toState;
 	private ArrayList<Literal> stateLits;
 	private int costToNode;
+	private Point goal;
 	private int costToGoal;
 
 	/**
@@ -21,12 +23,13 @@ public class Node implements Comparable<Object>{
 	 * @param costToNode - The total cost to get to this node
 	 * @param costToGoal - Estimated cost to goal
 	 */
-	public Node(StateView state, Node parent, Act toState, ArrayList<Literal> stateLits, int costToNode, int costToGoal) {
+	public Node(StateView state, Node parent, Act toState, ArrayList<Literal> stateLits, int costToNode, Point goal, int costToGoal) {
 		this.state = state;
 		this.parent = parent;
 		this.toState = toState;
 		this.stateLits = stateLits;
 		this.costToNode = costToNode;
+		this.goal = goal;
 		this.costToGoal = costToGoal;
 	}
 	
@@ -50,6 +53,14 @@ public class Node implements Comparable<Object>{
 		this.costToNode = costToNode;
 	}
 	
+	public Point getGoal() {
+		return goal;
+	}
+	
+	public void setGoal(Point goal) {
+		this.goal = goal;
+	}
+	
 	public int getCostToGoal() {
 		return costToGoal;
 	}
@@ -62,22 +73,17 @@ public class Node implements Comparable<Object>{
 		return stateLits;
 	}
 	
-	//TODO make a method that can be used to see if a specific literal is in the node
-	//I sorta started this method for you. You can use the equals methods in At and Has to compare them
-	//but just make sure that you use the correct class
+	/**
+	 * 
+	 * @param toFind - The literal you are searching for
+	 * @return True if the node contains the queried literal.
+	 */
 	public boolean containsLit(Literal toFind) {
-		Class<? extends Literal> findClassType = toFind.getClass();
-		for(Literal l : stateLits) {
-			Class<? extends Literal> classType = l.getClass();
-			if(findClassType.equals(classType)) {
-				//for has class
-				if(findClassType.equals(Class<Has>)) {
-					if(toFind.equals(l)) return true;
-				}
-				//for at class
-				if(findClassType.equals(Class<At>))){
-					if toFind.equals(l)) return true;
-				}
+		String toFindClass = toFind.getClass().toString();
+		for(Literal stateLit : stateLits) {
+			String classType = stateLit.getClass().toString();
+			if(classType.equals(toFindClass)) {
+				return true;
 			}
 		}
 		return false;

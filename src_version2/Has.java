@@ -1,27 +1,38 @@
+import edu.cwru.sepia.environment.model.state.ResourceType;
+
 
 public class Has extends Literal {
 	
 	private int holderID;
-	private int toHoldID;
+	private ResourceType resource;
 	
-	public Has(int holderID, int toHoldID) {
+	/**
+	 * 
+	 * @param holderID - ID of the holder
+	 * @param resource - Resource they are holding
+	 */
+	public Has(int holderID, ResourceType resource) {
 		this.holderID = holderID;
-		this.toHoldID = toHoldID;
+		this.resource = resource;
 	}
 
 	public int getHolderID() {
 		return holderID;
 	}
 	
-	public int getToHold() {
-		return toHoldID;
+	public ResourceType getToHold() {
+		return resource;
 	}
 
 	@Override
 	public boolean equals(Object o) { //must make sure the object is of class Has before using
+		if(!o.getClass().toString().equals("Has")) {
+			return false;
+		}
 		Has h = (Has)o;
-		if(h.holderID == this.holderID && h.toHoldID == this.toHoldID)
+		if(h.holderID == this.holderID && h.resource.equals(this.resource)) {
 			return true;
+		}
 		return false;
 	}
 }
