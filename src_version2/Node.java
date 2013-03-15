@@ -13,6 +13,7 @@ public class Node implements Comparable<Object>{
 	private int costToNode;
 	private Point goal;
 	private int costToGoal;
+	private Point peasantLoc;
 
 	/**
 	 * 
@@ -23,7 +24,8 @@ public class Node implements Comparable<Object>{
 	 * @param costToNode - The total cost to get to this node
 	 * @param costToGoal - Estimated cost to goal
 	 */
-	public Node(StateView state, Node parent, Act toState, ArrayList<Literal> stateLits, int costToNode, Point goal, int costToGoal) {
+	public Node(StateView state, Node parent, Act toState, ArrayList<Literal> stateLits, 
+			int costToNode, Point goal, int costToGoal, Point peasantLoc) {
 		this.state = state;
 		this.parent = parent;
 		this.toState = toState;
@@ -31,6 +33,7 @@ public class Node implements Comparable<Object>{
 		this.costToNode = costToNode;
 		this.goal = goal;
 		this.costToGoal = costToGoal;
+		this.setPeasantLoc(peasantLoc);
 	}
 	
 	public StateView getState() {
@@ -99,6 +102,14 @@ public class Node implements Comparable<Object>{
 		} else {
 			return 1;
 		}
+	}
+
+	public Point getPeasantLoc() {
+		return peasantLoc;
+	}
+
+	public void setPeasantLoc(Point peasantLoc) {
+		this.peasantLoc = peasantLoc;
 	}
 
 }

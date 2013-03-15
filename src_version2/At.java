@@ -26,12 +26,13 @@ public class At extends Literal {
 	
 	@Override
 	public boolean equals(Object o) { //must make sure the object is of class At before using
-		if(!o.getClass().toString().equals("At")) {
+		if(!o.getClass().toString().equals("class At")) {
 			return false;
 		}
 		At a = (At)o;
-		if(a.objectID == this.objectID && a.position.equals(this.position))
+		if(a.objectID == this.objectID && a.position.equals(this.position)) {
 			return true;
+		}
 		return false;
 	}
 	

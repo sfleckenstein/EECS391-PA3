@@ -26,7 +26,7 @@ public class Has extends Literal {
 
 	@Override
 	public boolean equals(Object o) { //must make sure the object is of class Has before using
-		if(!o.getClass().toString().equals("Has")) {
+		if(!o.getClass().toString().equals("class Has")) {
 			return false;
 		}
 		Has h = (Has)o;
