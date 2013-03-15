@@ -9,6 +9,7 @@ public class DepositGold extends Act {
 	private int amount;
 	private Direction directionToTownHall;
 	
+	@Deprecated
 	public DepositGold(int amount, Direction dirToTH) {
 		this.amount = amount;
 		this.directionToTownHall = dirToTH;

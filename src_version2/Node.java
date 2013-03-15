@@ -1,12 +1,10 @@
 import java.awt.Point;
 import java.util.ArrayList;
 
-import edu.cwru.sepia.environment.model.state.State.StateView;
-
 
 public class Node implements Comparable<Object>{
 	
-	private StateView state;
+//	private StateView state;
 	private Node parent;
 	private Act toState;
 	private ArrayList<Literal> stateLits;
@@ -22,23 +20,24 @@ public class Node implements Comparable<Object>{
 	 * @param toState - The Act to get to this node
 	 * @param stateLits - The list of closed world assumptions
 	 * @param costToNode - The total cost to get to this node
+	 * @param goal - The point the next goal resides at
 	 * @param costToGoal - Estimated cost to goal
 	 */
-	public Node(StateView state, Node parent, Act toState, ArrayList<Literal> stateLits, 
+	public Node(Node parent, Act toState, ArrayList<Literal> stateLits, 
 			int costToNode, Point goal, int costToGoal, Point peasantLoc) {
-		this.state = state;
+//		this.state = state;
 		this.parent = parent;
 		this.toState = toState;
 		this.stateLits = stateLits;
 		this.costToNode = costToNode;
 		this.goal = goal;
 		this.costToGoal = costToGoal;
-		this.setPeasantLoc(peasantLoc);
+		this.peasantLoc = peasantLoc;
 	}
 	
-	public StateView getState() {
-		return state;
-	}
+//	public StateView getState() {
+//		return state;
+//	}
 	
 	public Node getParentNode() {
 		return parent;
@@ -110,6 +109,11 @@ public class Node implements Comparable<Object>{
 
 	public void setPeasantLoc(Point peasantLoc) {
 		this.peasantLoc = peasantLoc;
+	}
+	
+	public Node getCopy() {
+		Node copy = this;
+		return copy;
 	}
 
 }

@@ -9,6 +9,7 @@ public class GatherWood extends Act {
 	private int amount;
 	private Direction directionToWood;
 	
+	@Deprecated
 	public GatherWood(int amount, Direction dirToWood) {
 		this.amount = amount;
 		this.directionToWood = dirToWood;

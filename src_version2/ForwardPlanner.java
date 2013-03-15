@@ -21,7 +21,6 @@
 
 
 import java.awt.Point;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -38,7 +37,6 @@ import edu.cwru.sepia.environment.model.history.History;
 import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.environment.model.state.ResourceNode.Type;
 import edu.cwru.sepia.environment.model.state.ResourceType;
-import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.State.StateView;
 import edu.cwru.sepia.environment.model.state.Unit.UnitView;
 import edu.cwru.sepia.util.Direction;
@@ -46,7 +44,7 @@ import edu.cwru.sepia.util.Direction;
 public class ForwardPlanner extends Agent {
 	private static final long serialVersionUID = -4047208702628325380L;
 	private static final Logger logger = Logger.getLogger(ForwardPlanner.class.getCanonicalName());
-	private static final int GATHER_AMOUNT = 100;	//TODO find the correct amount
+	public static final int GATHER_AMOUNT = 100;	//TODO find the correct amount
 
 	private int step;
 	private int currentGoal;
@@ -96,13 +94,17 @@ public class ForwardPlanner extends Agent {
 		UnitView peasant = currentState.getUnit(peasantIds.get(0));
 		
 		ArrayList<Literal> stateLits = new ArrayList<Literal>();
+		//TODO 98 could be the proble line
 		Point peasantLoc = new Point(peasant.getXPosition(), peasant.getYPosition());
 		At at = new At(peasantIds.get(0), peasantLoc);
 		stateLits.add(at);
-		
 		ResourceView wood = currentState.getResourceNode(getClosestWoodID(peasant));
+		ResourceView gold = currentState.getResourceNode(getClosestGoldID(peasant));
 		
-		open.add(new Node(newState, null, null, stateLits, 0, 
+//		open.add(new Node(newState, null, null, stateLits, 0, 
+//				new Point(wood.getXPosition(), wood.getYPosition()), 99999, peasantLoc));
+		
+		open.add(new Node(null, null, stateLits, 0, 
 				new Point(wood.getXPosition(), wood.getYPosition()), 99999, peasantLoc));
 		
 		while(true) {
@@ -124,12 +126,12 @@ public class ForwardPlanner extends Agent {
 			
 			closed.add(node);
 			
-			State nextState = null;
-			try {
-				nextState = node.getState().getStateCreator().createState();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+//			State nextState = null;
+//			try {
+//				nextState = node.getCopy().getState().getStateCreator().createState();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
 			
 			peasant = currentState.getUnit(peasantIds.get(0));
 			UnitView townhall = currentState.getUnit(townhallIds.get(0));
@@ -139,7 +141,8 @@ public class ForwardPlanner extends Agent {
 			//actions to potentially add
 			
 			//Deposit Good/Wood
-			if(node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD))
+			if((node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD))
+					|| node.containsLit(new Has(peasantIds.get(0), ResourceType.WOOD)))
 					&& areAdjacent(node, peasantIds.get(0), townhallIds.get(0))) { //preconditions
 				
 				//generate and remove the remove list
@@ -152,65 +155,100 @@ public class ForwardPlanner extends Agent {
 				literals.removeAll(toRemove);
 				
 				//add list (nothing in this case)
+
+				Deposit deposit = new Deposit(peasant.getCargoAmount(), getDirectionBetween(peasant, townhall));
 				
-				int estimatedCost;
+				Point goal = node.getGoal();
+				int estimatedCost = 99999;
 				int closestResourceID;
 				
-				if(currentWood < 200) {
-					closestResourceID = getClosestWoodID(peasant);
-					wood = currentState.getResourceNode(closestResourceID);
+				if(peasant.getCargoType().equals(ResourceType.WOOD)) {
 					
-					estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
-							wood.getXPosition(), wood.getYPosition());
-					DepositWood deposit = new DepositWood(peasant.getCargoAmount(), getDirectionBetween(peasant, townhall));
+//					try {
+//						nextState = node.getCopy().getState().getStateCreator().createState();
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
 					
-					Point goal = new Point();
-					goal.x = wood.getXPosition();
-					goal.y = wood.getYPosition();
-					
-					peasantLoc.x = node.getPeasantLoc().x;
-					peasantLoc.y = node.getPeasantLoc().y;
-					
-					Node n = new Node(nextState.getView(0), node, deposit, node.getStateLits(), 
-							node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
-					
-					if(!closed.contains(n)) {
-						open.add(n);
-					} else if (open.contains(n)){
-						Node toCompare = open.get(n);
-						if(toCompare.getCostToNode() > n.getCostToNode()) {
-							toCompare.setCostToNode(n.getCostToNode());
-							toCompare.setParentNode(n.getParentNode());
-						}
+					if(peasant.getCargoAmount() + currentWood < 200) {
+						closestResourceID = getClosestWoodID(peasant);
+						wood = currentState.getResourceNode(closestResourceID);
+						
+						estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
+								wood.getXPosition(), wood.getYPosition());
+						
+						goal.x = wood.getXPosition();
+						goal.y = wood.getYPosition();
+						
+						peasantLoc.x = node.getPeasantLoc().x;
+						peasantLoc.y = node.getPeasantLoc().y;
+					} else if(currentGold < 200) {
+						closestResourceID = getClosestGoldID(peasant);
+						gold = currentState.getResourceNode(closestResourceID);
+						
+						estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
+								gold.getXPosition(), gold.getYPosition());
+						
+						goal.x = gold.getXPosition();
+						goal.y = gold.getYPosition();
+						
+						peasantLoc.x = node.getPeasantLoc().x;
+						peasantLoc.y = node.getPeasantLoc().y;
+					} else {
+						estimatedCost = 0;
 					}
-				} else if(currentGold + peasant.getCargoAmount() < 200){
-					literals = node.getStateLits();
+				}
+				
+				if(peasant.getCargoType().equals(ResourceType.GOLD)) {
 					
-					closestResourceID = getClosestGoldID(peasant);
-					ResourceView gold = currentState.getResourceNode(closestResourceID);
+//					try {
+//						nextState = node.getCopy().getState().getStateCreator().createState();
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
 					
-					estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
-							gold.getXPosition(), gold.getYPosition());
-					DepositGold deposit = new DepositGold(peasant.getCargoAmount(), getDirectionBetween(peasant, townhall));
-					
-					Point goal = new Point();
-					goal.x = gold.getXPosition();
-					goal.y = gold.getYPosition();
-					
-					peasantLoc.x = node.getPeasantLoc().x;
-					peasantLoc.y = node.getPeasantLoc().y;
-					
-					Node n = new Node(nextState.getView(0), node, deposit, node.getStateLits(), 
-							node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
-					
-					if(!closed.contains(n)) {
-						open.add(n);
-					} else if (open.contains(n)){
-						Node toCompare = open.get(n);
-						if(toCompare.getCostToNode() > n.getCostToNode()) {
-							toCompare.setCostToNode(n.getCostToNode());
-							toCompare.setParentNode(n.getParentNode());
-						}
+					if(peasant.getCargoAmount() + currentGold < 200) {
+						closestResourceID = getClosestGoldID(peasant);
+						gold = currentState.getResourceNode(closestResourceID);
+						
+						estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
+								gold.getXPosition(), gold.getYPosition());
+						
+						goal.x = gold.getXPosition();
+						goal.y = gold.getYPosition();
+						
+						peasantLoc.x = node.getPeasantLoc().x;
+						peasantLoc.y = node.getPeasantLoc().y;
+					} else if(currentWood < 200) {
+						closestResourceID = getClosestWoodID(peasant);
+						wood = currentState.getResourceNode(closestResourceID);
+						
+						estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
+								wood.getXPosition(), wood.getYPosition());
+						
+						goal.x = wood.getXPosition();
+						goal.y = wood.getYPosition();
+						
+						peasantLoc.x = node.getPeasantLoc().x;
+						peasantLoc.y = node.getPeasantLoc().y;
+					} else {
+						estimatedCost = 0;
+					}
+				}
+				
+//				Node n = new Node(nextState.getView(0), node, deposit, node.getStateLits(), 
+//						node.getCostToNode() + 1, goal, estimatedCost, peasantLoc);
+				
+				Node n = new Node(node, deposit, node.getStateLits(), 
+						node.getCostToNode() + 1, goal, estimatedCost, peasantLoc);
+				
+				if(!closed.contains(n)) {
+					open.add(n);
+				} else if (open.contains(n)){
+					Node toCompare = open.get(n);
+					if(toCompare.getCostToNode() > n.getCostToNode()) {
+						toCompare.setCostToNode(n.getCostToNode());
+						toCompare.setParentNode(n.getParentNode());
 					}
 				}
 			}
@@ -219,6 +257,12 @@ public class ForwardPlanner extends Agent {
 			if(currentWood < 200) {
 				int woodID = getClosestWoodID(peasant);
 				if(areAdjacent(node, peasantIds.get(0), woodID)) {
+//					try {
+//						nextState = node.getCopy().getState().getStateCreator().createState();
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
+					
 					literals = node.getStateLits();
 
 					//remove list (nothing in this case)
@@ -228,7 +272,7 @@ public class ForwardPlanner extends Agent {
 					
 					//TODO check if peasant is in the right location. I bet it's not
 					Direction dir = getDirectionBetween(peasant, currentState.getResourceNode(woodID));
-					GatherWood gather = new GatherWood(GATHER_AMOUNT, dir);
+					Gather gather = new Gather(GATHER_AMOUNT, dir);
 					
 					int estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
 							townhall.getXPosition(), townhall.getYPosition());
@@ -240,8 +284,11 @@ public class ForwardPlanner extends Agent {
 					peasantLoc.x = node.getPeasantLoc().x;
 					peasantLoc.y = node.getPeasantLoc().y;
 					
-					Node n = new Node(nextState.getView(0), node, gather, node.getStateLits(), 
+//					Node n = new Node(nextState.getView(0), node, gather, node.getStateLits(), 
+//							node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+					Node n = new Node(node, gather, node.getStateLits(), 
 							node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+					
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -256,6 +303,12 @@ public class ForwardPlanner extends Agent {
 			} else if(currentGold < 200) {
 				int goldID = getClosestGoldID(peasant);
 				if(areAdjacent(node, peasantIds.get(0), goldID)) {
+//					try {
+//						nextState = node.getCopy().getState().getStateCreator().createState();
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
+					
 					literals = node.getStateLits();
 
 					//remove list (nothing in this case)
@@ -264,7 +317,7 @@ public class ForwardPlanner extends Agent {
 					literals.add(new Has(peasantIds.get(0), ResourceType.GOLD));
 					
 					Direction dir = getDirectionBetween(peasant, currentState.getResourceNode(goldID));
-					GatherGold gather = new GatherGold(GATHER_AMOUNT, dir);
+					Gather gather = new Gather(GATHER_AMOUNT, dir);
 					
 					int estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
 							townhall.getXPosition(), townhall.getYPosition());
@@ -276,8 +329,11 @@ public class ForwardPlanner extends Agent {
 					peasantLoc.x = node.getPeasantLoc().x;
 					peasantLoc.y = node.getPeasantLoc().y;
 					
-					Node n = new Node(nextState.getView(0), node, gather, node.getStateLits(), 
+//					Node n = new Node(nextState.getView(0), node, gather, node.getStateLits(), 
+//							node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+					Node n = new Node(node, gather, node.getStateLits(), 
 							node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+					
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -292,13 +348,22 @@ public class ForwardPlanner extends Agent {
 			}
 			
 			//move west
-			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.WEST);
+//			try {
+//				nextState = node.getCopy().getState().getStateCreator().createState();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+			
+//			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.WEST);
 			
 			int estimatedCost = calculateHeuristicDistance(peasant.getXPosition() - 1, peasant.getYPosition(), 
 					node.getGoal().x, node.getGoal().y);
 			Move move = new Move(Direction.WEST);
 
-			if(node.getState().inBounds(node.getPeasantLoc().x - 1, node.getPeasantLoc().y)) {
+//			if(node.getState().inBounds(node.getPeasantLoc().x - 1, node.getPeasantLoc().y)) {
+			if(currentState.inBounds(node.getPeasantLoc().x - 1, node.getPeasantLoc().y)) {
+				//TODO check for collisions
+			
 				literals = node.getStateLits();
 				
 				//generate remove list
@@ -307,11 +372,15 @@ public class ForwardPlanner extends Agent {
 				//generate add list
 				literals.add(new At(peasantIds.get(0), new Point(node.getPeasantLoc().x - 1, node.getPeasantLoc().y)));
 				
+				//TODO after the next line is executed, node.getPeasantLoc().x is decremented
 				peasantLoc.x = node.getPeasantLoc().x - 1;
 				peasantLoc.y = node.getPeasantLoc().y;
-
-				Node n = new Node(nextState.getView(0), node, move, node.getStateLits(), 
+				
+//				Node n = new Node(nextState.getView(0), node, move, node.getStateLits(), 
+//						node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+				Node n = new Node(node, move, node.getStateLits(), 
 						node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+				
 				
 				if(!closed.contains(n)) {
 					open.add(n);
@@ -323,16 +392,22 @@ public class ForwardPlanner extends Agent {
 					}
 				}
 			}
-			
-			
+
 			//move north
-			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.NORTH);
+//			try {
+//				nextState = node.getCopy().getState().getStateCreator().createState();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+			
+//			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.NORTH);
 			
 			estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y - 1, 
 					node.getGoal().x, node.getGoal().y);
 			move = new Move(Direction.NORTH);
 
-			if(node.getState().inBounds(node.getPeasantLoc().x, node.getPeasantLoc().y - 1)) {
+//			if(node.getState().inBounds(node.getPeasantLoc().x, node.getPeasantLoc().y - 1)) {
+			if(currentState.inBounds(node.getPeasantLoc().x, node.getPeasantLoc().y - 1)) {
 				literals = node.getStateLits();
 				
 				//generate remove list
@@ -344,7 +419,9 @@ public class ForwardPlanner extends Agent {
 				peasantLoc.x = node.getPeasantLoc().x;
 				peasantLoc.y = node.getPeasantLoc().y - 1;
 				
-				Node n = new Node(nextState.getView(0), node, move, node.getStateLits(), 
+//				Node n = new Node(nextState.getView(0), node, move, node.getStateLits(), 
+//						node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+				Node n = new Node(node, move, node.getStateLits(), 
 						node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
 				
 				if(!closed.contains(n)) {
@@ -360,13 +437,20 @@ public class ForwardPlanner extends Agent {
 			
 			
 			//move east
-			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.EAST);
+//			try {
+//				nextState = node.getCopy().getState().getStateCreator().createState();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+			
+//			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.EAST);
 			
 			estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x + 1, node.getPeasantLoc().y, 
 					node.getGoal().x, node.getGoal().y);
 			move = new Move(Direction.EAST);
 
-			if(node.getState().inBounds(node.getPeasantLoc().x + 1, node.getPeasantLoc().y)) {
+//			if(node.getState().inBounds(node.getPeasantLoc().x + 1, node.getPeasantLoc().y)) {
+			if(currentState.inBounds(node.getPeasantLoc().x + 1, node.getPeasantLoc().y)) {
 				literals = node.getStateLits();
 				
 				//generate remove list
@@ -378,7 +462,9 @@ public class ForwardPlanner extends Agent {
 				peasantLoc.x = peasant.getXPosition() + 1;
 				peasantLoc.y = peasant.getYPosition();
 				
-				Node n = new Node(nextState.getView(0), node, move, node.getStateLits(), 
+//				Node n = new Node(nextState.getView(0), node, move, node.getStateLits(), 
+//						node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+				Node n = new Node(node, move, node.getStateLits(), 
 						node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
 				
 				if(!closed.contains(n)) {
@@ -394,13 +480,20 @@ public class ForwardPlanner extends Agent {
 			
 			
 			//move south
-			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.SOUTH);
+//			try {
+//				nextState = node.getCopy().getState().getStateCreator().createState();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//			
+//			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.SOUTH);
 			
 			estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y + 1, 
 					node.getGoal().x, node.getGoal().y);
 			move = new Move(Direction.SOUTH);
 
-			if(node.getState().inBounds(node.getPeasantLoc().x, node.getPeasantLoc().y + 1)) {
+//			if(node.getState().inBounds(node.getPeasantLoc().x, node.getPeasantLoc().y + 1)) {
+			if(currentState.inBounds(node.getPeasantLoc().x, node.getPeasantLoc().y + 1)) {
 				literals = node.getStateLits();
 
 				//generate remove list
@@ -412,7 +505,9 @@ public class ForwardPlanner extends Agent {
 				peasantLoc.x = peasant.getXPosition();
 				peasantLoc.y = peasant.getYPosition() ;
 				
-				Node n = new Node(nextState.getView(0), node, move, node.getStateLits(), 
+//				Node n = new Node(nextState.getView(0), node, move, node.getStateLits(), 
+//						node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+				Node n = new Node(node, move, node.getStateLits(), 
 						node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
 				
 				if(!closed.contains(n)) {
