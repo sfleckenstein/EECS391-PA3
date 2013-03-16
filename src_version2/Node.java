@@ -1,10 +1,12 @@
 import java.awt.Point;
 import java.util.ArrayList;
 
+import edu.cwru.sepia.environment.model.state.State.StateView;
+
 
 public class Node implements Comparable<Object>{
 	
-//	private StateView state;
+	private StateView state;
 	private Node parent;
 	private Act toState;
 	private ArrayList<Literal> stateLits;
@@ -23,9 +25,9 @@ public class Node implements Comparable<Object>{
 	 * @param goal - The point the next goal resides at
 	 * @param costToGoal - Estimated cost to goal
 	 */
-	public Node(Node parent, Act toState, ArrayList<Literal> stateLits, 
+	public Node(StateView state, Node parent, Act toState, ArrayList<Literal> stateLits, 
 			int costToNode, Point goal, int costToGoal, Point peasantLoc) {
-//		this.state = state;
+		this.state = state;
 		this.parent = parent;
 		this.toState = toState;
 		this.stateLits = stateLits;
@@ -35,9 +37,9 @@ public class Node implements Comparable<Object>{
 		this.peasantLoc = peasantLoc;
 	}
 	
-//	public StateView getState() {
-//		return state;
-//	}
+	public StateView getState() {
+		return state;
+	}
 	
 	public Node getParentNode() {
 		return parent;
