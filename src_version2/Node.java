@@ -92,7 +92,9 @@ public class Node implements Comparable<Object>{
 		for(Literal stateLit : stateLits) {
 			String classType = stateLit.getClass().toString();
 			if(classType.equals(toFindClass)) {
-				return true;
+				if(stateLit.equals(toFind)){ //needs to check if objects are storing the same info (not just the same class)
+					return true;
+				}
 			}
 		}
 		return false;
