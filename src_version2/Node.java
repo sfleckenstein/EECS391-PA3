@@ -34,7 +34,12 @@ public class Node implements Comparable<Object>{
 		this.costToNode = costToNode;
 		this.goal = goal;
 		this.costToGoal = costToGoal;
-		this.peasantLoc = peasantLoc;
+//		if(peasantLoc != null) {
+//			this.peasantLoc.x = peasantLoc.x;
+//			this.peasantLoc.y = peasantLoc.y;
+//		} else {
+			this.peasantLoc = new Point((int)peasantLoc.getX(), (int)peasantLoc.getY());
+//		}
 	}
 	
 	public StateView getState() {
@@ -111,11 +116,6 @@ public class Node implements Comparable<Object>{
 
 	public void setPeasantLoc(Point peasantLoc) {
 		this.peasantLoc = peasantLoc;
-	}
-	
-	public Node getCopy() {
-		Node copy = this;
-		return copy;
 	}
 
 }

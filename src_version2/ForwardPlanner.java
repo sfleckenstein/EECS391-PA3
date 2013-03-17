@@ -96,7 +96,6 @@ public class ForwardPlanner extends Agent {
 		UnitView peasant = currentState.getUnit(peasantIds.get(0));
 		
 		ArrayList<Literal> stateLits = new ArrayList<Literal>();
-		//TODO 98 could be the problem line
 		Point peasantLoc = new Point(peasant.getXPosition(), peasant.getYPosition());
 		At at = new At(peasantIds.get(0), peasantLoc);
 		stateLits.add(at);
@@ -127,7 +126,7 @@ public class ForwardPlanner extends Agent {
 			
 			State nextState = null;
 			try {
-				nextState = node.getCopy().getState().getStateCreator().createState();
+				nextState = node.getState().getStateCreator().createState();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -164,7 +163,7 @@ public class ForwardPlanner extends Agent {
 				if(peasant.getCargoType().equals(ResourceType.WOOD)) {
 					
 					try {
-						nextState = node.getCopy().getState().getStateCreator().createState();
+						nextState = node.getState().getStateCreator().createState();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -201,7 +200,7 @@ public class ForwardPlanner extends Agent {
 				if(peasant.getCargoType().equals(ResourceType.GOLD)) {
 					
 					try {
-						nextState = node.getCopy().getState().getStateCreator().createState();
+						nextState = node.getState().getStateCreator().createState();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -255,7 +254,7 @@ public class ForwardPlanner extends Agent {
 				if(areAdjacent(node, peasantIds.get(0), woodID)) {
 					
 					try {
-						nextState = node.getCopy().getState().getStateCreator().createState();
+						nextState = node.getState().getStateCreator().createState();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -299,7 +298,7 @@ public class ForwardPlanner extends Agent {
 				if(areAdjacent(node, peasantIds.get(0), goldID)) {
 					
 					try {
-						nextState = node.getCopy().getState().getStateCreator().createState();
+						nextState = node.getState().getStateCreator().createState();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -341,7 +340,7 @@ public class ForwardPlanner extends Agent {
 			
 			//move west
 			try {
-				nextState = node.getCopy().getState().getStateCreator().createState();
+				nextState = node.getState().getStateCreator().createState();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -364,7 +363,6 @@ public class ForwardPlanner extends Agent {
 				//generate add list
 				literals.add(new At(peasantIds.get(0), new Point(node.getPeasantLoc().x - 1, node.getPeasantLoc().y)));
 				
-				//TODO after the next line is executed, node.getPeasantLoc().x is decremented
 				peasantLoc.x = node.getPeasantLoc().x - 1;
 				peasantLoc.y = node.getPeasantLoc().y;
 				
@@ -384,7 +382,7 @@ public class ForwardPlanner extends Agent {
 
 			//move north
 			try {
-				nextState = node.getCopy().getState().getStateCreator().createState();
+				nextState = node.getState().getStateCreator().createState();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -426,7 +424,7 @@ public class ForwardPlanner extends Agent {
 			
 			//move east
 			try {
-				nextState = node.getCopy().getState().getStateCreator().createState();
+				nextState = node.getState().getStateCreator().createState();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -468,7 +466,7 @@ public class ForwardPlanner extends Agent {
 			
 			//move south
 			try {
-				nextState = node.getCopy().getState().getStateCreator().createState();
+				nextState = node.getState().getStateCreator().createState();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -645,8 +643,8 @@ public class ForwardPlanner extends Agent {
 	public boolean areAdjacent(Node node, int objOneId, int objTwoId) {
 		for(Literal lit1 : node.getStateLits()) {
 			for(Literal lit2 : node.getStateLits()) {
-				if(lit1.getClass().toString().equals("At")
-						&& lit2.getClass().toString().equals("At")) {
+				if(lit1.getClass().toString().equals("class At")
+						&& lit2.getClass().toString().equals("class At")) {
 					if(((At)lit1).getObjectID() == objOneId
 							&& ((At)lit2).getObjectID() == objTwoId) {
 						
