@@ -71,6 +71,7 @@ public class ForwardPlanner extends Agent {
 		step = 0;
 		
 		currentState = newState;
+		//System.out.println("init step");
 		
 		int currentGold = currentState.getResourceAmount(0, ResourceType.GOLD);
 		int currentWood = currentState.getResourceAmount(0, ResourceType.WOOD);
@@ -634,30 +635,27 @@ public class ForwardPlanner extends Agent {
 		}
 	}
 	
-	/**
-	 * 
-	 * @param unit - The ID of the unit you are concerned with.
-	 * @param resource - The ID of the resource you are concerned with.
-	 * @return True if the specified unit is adjacent to the specified resource.
-	 */
 	public boolean areAdjacent(Node node, int objOneId, int objTwoId) {
 		for(Literal lit1 : node.getStateLits()) {
-			for(Literal lit2 : node.getStateLits()) {
-				if(lit1.getClass().toString().equals("class At")
-						&& lit2.getClass().toString().equals("class At")) {
-					if(((At)lit1).getObjectID() == objOneId
-							&& ((At)lit2).getObjectID() == objTwoId) {
+			if(lit1.getClass().toString().equals("class At")) {
+				for(Literal lit2 : node.getStateLits()) {
+					if(lit2.getClass().toString().equals("class At")) {
 						
-						Point p1 = ((At)lit1).getPosition();
-						Point p2 = ((At)lit2).getPosition();
+						At at1 = (At)lit1;
+						At at2 = (At)lit2;
 						
-						if(Math.abs(p1.getX() - p2.getX()) <=1
-								&& Math.abs(p1.getY() - p2.getY()) <=1 ) {
-							return true;
+						if(at1.getObjectID() == objOneId
+								&& at2.getObjectID() == objTwoId) {
+							
+							Point p1 = at1.getPosition();
+							Point p2 = at2.getPosition();
+							
+							if(Math.abs(p1.getX() - p2.getX()) <=1
+									&& Math.abs(p1.getY() - p2.getY()) <=1 ) {
+								return true;
+							}
 						}
 					}
-				} else {
-					continue;
 				}
 			}
 		}
