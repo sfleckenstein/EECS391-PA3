@@ -25,11 +25,12 @@ public class Has extends Literal {
 	}
 
 	@Override
-	public boolean equals(Object o) { //must make sure the object is of class Has before using
+	public boolean equals(Object o) {
 		if(!o.getClass().toString().equals("class Has")) {
 			return false;
 		}
 		Has h = (Has)o;
+		//TODO this probably isn't working
 		if(h.holderID == this.holderID && h.resource.equals(this.resource)) {
 			return true;
 		}

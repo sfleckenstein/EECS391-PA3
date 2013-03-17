@@ -25,11 +25,12 @@ public class At extends Literal {
 	}
 	
 	@Override
-	public boolean equals(Object o) { //must make sure the object is of class At before using
+	public boolean equals(Object o) {
 		if(!o.getClass().toString().equals("class At")) {
 			return false;
 		}
 		At a = (At)o;
+		//TODO this isn't working
 		if(a.objectID == this.objectID && a.position.equals(this.position)) {
 			return true;
 		}
