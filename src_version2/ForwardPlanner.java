@@ -172,9 +172,6 @@ public class ForwardPlanner extends Agent {
 				int estimatedCost = 99999;
 				int closestResourceID;
 				
-				//TODO the Has generated in the Gather step is the same as the 
-				//Has in these literals. The peasant has cargo in the Gather step.
-				//That means that the peasant losees the cargo somewhere between here and there.
 				if(peasant.getCargoType().equals(ResourceType.WOOD)) {
 					//TODO check if this actually removes the right Has objects
 					//generate and remove the remove list
