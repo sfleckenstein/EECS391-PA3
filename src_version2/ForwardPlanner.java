@@ -106,11 +106,13 @@ public class ForwardPlanner extends Agent {
 			stateLits.add(at);
 		}
 		
-		ResourceView wood = currentState.getResourceNode(getClosestWoodID(peasant));
-		ResourceView gold = currentState.getResourceNode(getClosestGoldID(peasant));
+		ResourceView wood = currentState.getResourceNode(getClosestWoodID(peasantLoc, currentState));
+		ResourceView gold = currentState.getResourceNode(getClosestGoldID(peasantLoc, currentState));
+
+		Node root = new Node(newState, null, null, stateLits, 0, 
+				new Point(wood.getXPosition(), wood.getYPosition()), 99999, peasantLoc);
 		
-		open.add(new Node(newState, null, null, stateLits, 0, 
-				new Point(wood.getXPosition(), wood.getYPosition()), 99999, peasantLoc));
+		open.add(root);
 		
 		while(true) {
 			Node node = open.poll();
@@ -141,9 +143,9 @@ public class ForwardPlanner extends Agent {
 			currentGold = node.getState().getResourceAmount(0, ResourceType.GOLD);
 			currentWood = node.getState().getResourceAmount(0, ResourceType.WOOD);
 
-			peasant = currentState.getUnit(peasantIds.get(0));
-			UnitView townhall = currentState.getUnit(townhallIds.get(0));
-
+			peasant = node.getState().getUnit(peasantIds.get(0));
+			UnitView townhall = node.getState().getUnit(townhallIds.get(0));
+			
 			ArrayList<Literal> literals = null;
 			
 			boolean hasResource = false;
@@ -184,7 +186,8 @@ public class ForwardPlanner extends Agent {
 					}
 					
 					if(peasant.getCargoAmount() + currentWood < 200) {
-						closestResourceID = getClosestWoodID(peasant);
+						Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
+						closestResourceID = getClosestWoodID(loc, node.getState());
 						wood = currentState.getResourceNode(closestResourceID);
 						
 						estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
@@ -196,7 +199,8 @@ public class ForwardPlanner extends Agent {
 						peasantLoc.x = node.getPeasantLoc().x;
 						peasantLoc.y = node.getPeasantLoc().y;
 					} else if(currentGold < 200) {
-						closestResourceID = getClosestGoldID(peasant);
+						Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
+						closestResourceID = getClosestGoldID(loc, node.getState());
 						gold = currentState.getResourceNode(closestResourceID);
 						
 						estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
@@ -234,7 +238,8 @@ public class ForwardPlanner extends Agent {
 					//TODO maybe increase currentWood/currentGold on nextState?
 					
 					if(peasant.getCargoAmount() + currentGold < 200) {
-						closestResourceID = getClosestGoldID(peasant);
+						Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
+						closestResourceID = getClosestGoldID(loc, node.getState());
 						gold = node.getState().getResourceNode(closestResourceID);
 						
 						estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
@@ -246,7 +251,8 @@ public class ForwardPlanner extends Agent {
 						peasantLoc.x = node.getPeasantLoc().x;
 						peasantLoc.y = node.getPeasantLoc().y;
 					} else if(currentWood < 200) {
-						closestResourceID = getClosestWoodID(peasant);
+						Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
+						closestResourceID = getClosestWoodID(loc, node.getState());
 						wood = node.getState().getResourceNode(closestResourceID);
 						
 						estimatedCost = calculateHeuristicDistance(node.getPeasantLoc().x, node.getPeasantLoc().y, 
@@ -286,7 +292,8 @@ public class ForwardPlanner extends Agent {
 			
 			//Gather Gold/Wood
 			if(currentWood < 200 && !hasResource) {
-				int woodID = getClosestWoodID(peasant);
+				Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
+				int woodID = getClosestWoodID(loc, node.getState());
 				if(areAdjacent(node, peasantIds.get(0), woodID)) {
 					try {
 						nextState = node.getState().getStateCreator().createState();
@@ -333,7 +340,8 @@ public class ForwardPlanner extends Agent {
 					}
 				}
 			} else if(currentGold < 200 && !hasResource) {
-				int goldID = getClosestGoldID(peasant);
+				Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
+				int goldID = getClosestGoldID(loc, node.getState());
 				if(areAdjacent(node, peasantIds.get(0), goldID)) {
 					
 					try {
@@ -619,14 +627,14 @@ public class ForwardPlanner extends Agent {
 		return Math.max(Math.abs(peasantX - goalX), Math.abs(peasantY - goalY));
 	}
 
-	private int getClosestWoodID(UnitView unit) {
-		List<Integer> resourceIds = currentState.getResourceNodeIds(Type.TREE);
+	private int getClosestWoodID(Point unit, StateView state) {
+		List<Integer> resourceIds = state.getResourceNodeIds(Type.TREE);
 		int closestWoodID = resourceIds.get(0);
 		int minDist = 999;
 		for(Integer woodID : resourceIds) {
 			ResourceView resource = currentState.getResourceNode(woodID);
-			int xDist = Math.abs(resource.getXPosition() - unit.getXPosition());
-			int yDist = Math.abs(resource.getYPosition() - unit.getYPosition());
+			int xDist = Math.abs(resource.getXPosition() - unit.x);
+			int yDist = Math.abs(resource.getYPosition() - unit.y);
 			if(xDist + yDist < minDist) {
 				minDist = xDist + yDist;
 				closestWoodID = woodID;
@@ -635,14 +643,14 @@ public class ForwardPlanner extends Agent {
 		return closestWoodID;
 	}
 	
-	private int getClosestGoldID(UnitView unit) {
-		List<Integer> resourceIds = currentState.getResourceNodeIds(Type.GOLD_MINE);
+	private int getClosestGoldID(Point unit, StateView state) {
+		List<Integer> resourceIds = state.getResourceNodeIds(Type.GOLD_MINE);
 		int closestGoldID = resourceIds.get(0);
 		int minDist = 999;
 		for(Integer woodID : resourceIds) {
 			ResourceView resource = currentState.getResourceNode(woodID);
-			int xDist = Math.abs(resource.getXPosition() - unit.getXPosition());
-			int yDist = Math.abs(resource.getYPosition() - unit.getYPosition());
+			int xDist = Math.abs(resource.getXPosition() - unit.x);
+			int yDist = Math.abs(resource.getYPosition() - unit.y);
 			if(xDist + yDist < minDist) {
 				minDist = xDist + yDist;
 				closestGoldID = woodID;
@@ -716,11 +724,8 @@ public class ForwardPlanner extends Agent {
 						
 						if(at1.getObjectID() == objOneId
 								&& at2.getObjectID() == objTwoId) {
-							
 							Point p1 = at1.getPosition();
 							Point p2 = at2.getPosition();
-							System.out.println("Object 1: " + p1);
-							System.out.println("Object 2: " + p2 + "\n");
 							
 							if(Math.abs(p1.getX() - p2.getX()) <=1
 									&& Math.abs(p1.getY() - p2.getY()) <=1 ) {
@@ -731,7 +736,6 @@ public class ForwardPlanner extends Agent {
 				}
 			}
 		}
-		
 		return false;
 	}
 

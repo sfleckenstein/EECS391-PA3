@@ -30,7 +30,6 @@ public class Has extends Literal {
 			return false;
 		}
 		Has h = (Has)o;
-		//TODO this probably isn't working
 		if(h.holderID == this.holderID && h.resource.equals(this.resource)) {
 			return true;
 		}

@@ -30,7 +30,6 @@ public class At extends Literal {
 			return false;
 		}
 		At a = (At)o;
-		//TODO this isn't working
 		if(a.objectID == this.objectID && a.position.equals(this.position)) {
 			return true;
 		}
