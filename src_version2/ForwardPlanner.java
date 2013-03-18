@@ -106,6 +106,10 @@ public class ForwardPlanner extends Agent {
 			stateLits.add(at);
 		}
 		
+		UnitView townhall = currentState.getUnit(townhallIds.get(0));
+		at = new At(townhallIds.get(0), new Point(townhall.getXPosition(), townhall.getYPosition()));
+		stateLits.add(at);
+		
 		ResourceView wood = currentState.getResourceNode(getClosestWoodID(peasantLoc, currentState));
 		ResourceView gold = currentState.getResourceNode(getClosestGoldID(peasantLoc, currentState));
 
@@ -144,7 +148,7 @@ public class ForwardPlanner extends Agent {
 			currentWood = node.getState().getResourceAmount(0, ResourceType.WOOD);
 
 			peasant = node.getState().getUnit(peasantIds.get(0));
-			UnitView townhall = node.getState().getUnit(townhallIds.get(0));
+			townhall = node.getState().getUnit(townhallIds.get(0));
 			
 			ArrayList<Literal> literals = null;
 			
@@ -158,7 +162,9 @@ public class ForwardPlanner extends Agent {
 			
 			//Deposit Gold/Wood
 			if(hasResource && areAdjacent(node, peasantIds.get(0), townhallIds.get(0))) { //preconditions
-				literals = node.getStateLits();
+				peasant = node.getState().getUnit(peasantIds.get(0));
+				literals = new ArrayList<Literal>();
+				literals.addAll(node.getStateLits());
 				
 				Deposit deposit = new Deposit(peasant.getCargoAmount(), getDirectionBetween(peasant, townhall));
 				
@@ -166,6 +172,9 @@ public class ForwardPlanner extends Agent {
 				int estimatedCost = 99999;
 				int closestResourceID;
 				
+				//TODO the Has generated in the Gather step is the same as the 
+				//Has in these literals. The peasant has cargo in the Gather step.
+				//That means that the peasant losees the cargo somewhere between here and there.
 				if(peasant.getCargoType().equals(ResourceType.WOOD)) {
 					//TODO check if this actually removes the right Has objects
 					//generate and remove the remove list
@@ -184,6 +193,9 @@ public class ForwardPlanner extends Agent {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					
+					nextState.addResourceAmount(0, ResourceType.WOOD, peasant.getCargoAmount());
+					nextState.getUnit(peasantIds.get(0)).setCargo(null, 0);//TODO is null ok here?
 					
 					if(peasant.getCargoAmount() + currentWood < 200) {
 						Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
@@ -235,7 +247,8 @@ public class ForwardPlanner extends Agent {
 						e.printStackTrace();
 					}
 					
-					//TODO maybe increase currentWood/currentGold on nextState?
+					nextState.addResourceAmount(0, ResourceType.GOLD, peasant.getCargoAmount());
+					nextState.getUnit(peasantIds.get(0)).setCargo(null, 0);
 					
 					if(peasant.getCargoAmount() + currentGold < 200) {
 						Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
@@ -292,7 +305,8 @@ public class ForwardPlanner extends Agent {
 			
 			//Gather Gold/Wood
 			if(currentWood < 200 && !hasResource) {
-				Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
+				Point pLoc = node.getPeasantLoc();
+				Point loc = new Point(pLoc.x, pLoc.y);
 				int woodID = getClosestWoodID(loc, node.getState());
 				if(areAdjacent(node, peasantIds.get(0), woodID)) {
 					try {
@@ -301,7 +315,14 @@ public class ForwardPlanner extends Agent {
 						e.printStackTrace();
 					}
 					
-					literals = node.getStateLits();
+					if(nextState.getResource(woodID).getAmountRemaining() >= GATHER_AMOUNT) {
+						nextState.getUnit(peasantIds.get(0)).setCargo(ResourceType.WOOD, GATHER_AMOUNT);
+					} else {
+						nextState.getUnit(peasantIds.get(0)).setCargo(ResourceType.WOOD, nextState.getResource(woodID).getAmountRemaining());
+					}
+					
+					literals = new ArrayList<Literal>();
+					literals.addAll(node.getStateLits());
 					
 					//remove list
 					if(node.getState().getResourceNode(woodID).getAmountRemaining() <= GATHER_AMOUNT) {
@@ -327,7 +348,7 @@ public class ForwardPlanner extends Agent {
 					peasantLoc.y = node.getPeasantLoc().y;
 					
 					Node n = new Node(nextState.getView(0), node, gather, literals, 
-							node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+							node.getCostToNode() + 1, goal, estimatedCost, peasantLoc);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -340,17 +361,24 @@ public class ForwardPlanner extends Agent {
 					}
 				}
 			} else if(currentGold < 200 && !hasResource) {
-				Point loc = new Point(peasant.getXPosition(), peasant.getYPosition());
+				Point pLoc = node.getPeasantLoc();
+				Point loc = new Point(pLoc.x, pLoc.y);
 				int goldID = getClosestGoldID(loc, node.getState());
 				if(areAdjacent(node, peasantIds.get(0), goldID)) {
-					
 					try {
 						nextState = node.getState().getStateCreator().createState();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 					
-					literals = node.getStateLits();
+					if(nextState.getResource(goldID).getAmountRemaining() >= GATHER_AMOUNT) {
+						nextState.getUnit(peasantIds.get(0)).setCargo(ResourceType.GOLD, GATHER_AMOUNT);
+					} else {
+						nextState.getUnit(peasantIds.get(0)).setCargo(ResourceType.GOLD, nextState.getResource(goldID).getAmountRemaining());
+					}
+					
+					literals = new ArrayList<Literal>();
+					literals.addAll(node.getStateLits());
 
 					//remove list
 					if(currentState.getResourceNode(goldID).getAmountRemaining() <= GATHER_AMOUNT) {
@@ -376,7 +404,7 @@ public class ForwardPlanner extends Agent {
 					peasantLoc.y = node.getPeasantLoc().y;
 					
 					Node n = new Node(nextState.getView(0), node, gather, literals, 
-							node.getCostToNode() + 1, node.getGoal(), estimatedCost, peasantLoc);
+							node.getCostToNode() + 1, goal, estimatedCost, peasantLoc);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -403,17 +431,21 @@ public class ForwardPlanner extends Agent {
 					node.getGoal().x, node.getGoal().y);
 			Move move = new Move(Direction.WEST);
 
-			if(node.getState().inBounds(node.getPeasantLoc().x - 1, node.getPeasantLoc().y) 
-					&& !node.getState().isResourceAt(node.getPeasantLoc().x - 1, node.getPeasantLoc().y)
-					&& !node.getState().isUnitAt(node.getPeasantLoc().x - 1, node.getPeasantLoc().y)) {
+			//TODO do this with the rest of the movements
+			int nextX = node.getPeasantLoc().x - 1;
+			int nextY = node.getPeasantLoc().y;
 			
-				literals = node.getStateLits();
+			if(node.getState().inBounds(nextX, nextY) 
+					&& !node.getState().isResourceAt(nextX, nextY)
+					&& !node.getState().isUnitAt(nextX, nextY)) {
+				literals = new ArrayList<Literal>();
+				literals.addAll(node.getStateLits());
 				
 				//generate remove list
 				ArrayList<Literal> remove = new ArrayList<Literal>();
 				for(Literal lit : node.getStateLits()) {
 					if(lit.getClass().toString().equals("class At")
-							&& ((At)lit).getObjectID() == 1) {
+							&& ((At)lit).getObjectID() == peasantIds.get(0)) {
 						remove.add(lit);
 					}
 				}
@@ -455,7 +487,8 @@ public class ForwardPlanner extends Agent {
 			if(node.getState().inBounds(node.getPeasantLoc().x, node.getPeasantLoc().y - 1)
 						&& !node.getState().isResourceAt(node.getPeasantLoc().x, node.getPeasantLoc().y - 1)
 						&& !node.getState().isUnitAt(node.getPeasantLoc().x, node.getPeasantLoc().y - 1)) {
-				literals = node.getStateLits();
+				literals = new ArrayList<Literal>();
+				literals.addAll(node.getStateLits());
 				
 				//generate remove list
 				ArrayList<Literal> remove = new ArrayList<Literal>();
@@ -504,7 +537,8 @@ public class ForwardPlanner extends Agent {
 			if(node.getState().inBounds(node.getPeasantLoc().x + 1, node.getPeasantLoc().y)
 					&& !node.getState().isResourceAt(node.getPeasantLoc().x + 1, node.getPeasantLoc().y)
 					&& !node.getState().isUnitAt(node.getPeasantLoc().x + 1, node.getPeasantLoc().y)) {
-				literals = node.getStateLits();
+				literals = new ArrayList<Literal>();
+				literals.addAll(node.getStateLits());
 				
 				//generate remove list
 				ArrayList<Literal> remove = new ArrayList<Literal>();
@@ -552,7 +586,8 @@ public class ForwardPlanner extends Agent {
 			if(node.getState().inBounds(node.getPeasantLoc().x, node.getPeasantLoc().y + 1)
 					&& !node.getState().isResourceAt(node.getPeasantLoc().x, node.getPeasantLoc().y + 1)
 					&& !node.getState().isUnitAt(node.getPeasantLoc().x, node.getPeasantLoc().y + 1)) {
-				literals = node.getStateLits();
+				literals = new ArrayList<Literal>();
+				literals.addAll(node.getStateLits());
 
 				//generate remove list
 				ArrayList<Literal> remove = new ArrayList<Literal>();

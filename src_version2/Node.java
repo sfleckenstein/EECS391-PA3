@@ -17,13 +17,14 @@ public class Node implements Comparable<Object>{
 
 	/**
 	 * 
-	 * @param state - The StateView of the node
-	 * @param parent - Parent node
-	 * @param toState - The Act to get to this node
-	 * @param stateLits - The list of closed world assumptions
-	 * @param costToNode - The total cost to get to this node
-	 * @param goal - The point the next goal resides at
-	 * @param costToGoal - Estimated cost to goal
+	 * @param state - The state of the node
+	 * @param parent - The parent of the node
+	 * @param toState - The Act made to get to the state
+	 * @param stateLits - The state literals
+	 * @param costToNode - The total cost to get to the node
+	 * @param goal - The location of the goal
+	 * @param costToGoal - The estimated cost to the goal
+	 * @param peasantLoc - The location of the peasant
 	 */
 	public Node(StateView state, Node parent, Act toState, ArrayList<Literal> stateLits, 
 			int costToNode, Point goal, int costToGoal, Point peasantLoc) {
@@ -34,12 +35,7 @@ public class Node implements Comparable<Object>{
 		this.costToNode = costToNode;
 		this.goal = goal;
 		this.costToGoal = costToGoal;
-//		if(peasantLoc != null) {
-//			this.peasantLoc.x = peasantLoc.x;
-//			this.peasantLoc.y = peasantLoc.y;
-//		} else {
-			this.peasantLoc = new Point((int)peasantLoc.getX(), (int)peasantLoc.getY());
-//		}
+		this.peasantLoc = new Point((int)peasantLoc.getX(), (int)peasantLoc.getY());
 	}
 	
 	public StateView getState() {
@@ -92,7 +88,7 @@ public class Node implements Comparable<Object>{
 		for(Literal stateLit : stateLits) {
 			String classType = stateLit.getClass().toString();
 			if(classType.equals(toFindClass)) {
-				if(stateLit.equals(toFind)){ //needs to check if objects are storing the same info (not just the same class)
+				if(stateLit.equals(toFind)){
 					return true;
 				}
 			}
@@ -113,6 +109,12 @@ public class Node implements Comparable<Object>{
 	}
 
 	public Point getPeasantLoc() {
+		for(Literal lit : stateLits) {
+			if(lit.getClass().toString().equals("class At")
+					&& ((At)lit).getObjectID() == 1) {	//TODO 1 should be change to peasantIds.get(0) or something like that
+				return ((At)lit).getPosition();
+			}
+		}
 		return peasantLoc;
 	}
 
