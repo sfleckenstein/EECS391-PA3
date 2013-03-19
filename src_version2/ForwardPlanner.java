@@ -229,7 +229,6 @@ public class ForwardPlanner extends Agent {
 				int closestResourceID;
 				
 				if(hasWood) {
-					//TODO check if this actually removes the right Has objects
 					//generate and remove the remove list
 					ArrayList<Literal> toRemove = new ArrayList<Literal>();
 					int woodAmt = 0;
@@ -260,7 +259,7 @@ public class ForwardPlanner extends Agent {
 					nextState.getUnit(peasantIds.get(0)).setCargo(null, 0);//TODO is null ok here?
 					
 					//TODO get rid of the 200 stuff
-					if(peasant.getCargoAmount() + currentWood < 200) {
+					if(peasant.getCargoAmount() + currentWood < desiredWood) {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestWoodID(loc, node.getState());
 						wood = currentState.getResourceNode(closestResourceID);
@@ -269,7 +268,7 @@ public class ForwardPlanner extends Agent {
 						
 						goal.x = wood.getXPosition();
 						goal.y = wood.getYPosition();
-					} else if(currentGold < 200) {
+					} else if(currentGold < desiredGold) {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestGoldID(loc, node.getState());
 						gold = currentState.getResourceNode(closestResourceID);
@@ -314,7 +313,7 @@ public class ForwardPlanner extends Agent {
 					nextState.addResourceAmount(0, ResourceType.GOLD, peasant.getCargoAmount());
 					nextState.getUnit(peasantIds.get(0)).setCargo(null, 0);
 					//TODO get rid of 200 stuff
-					if(peasant.getCargoAmount() + currentGold < 200) {
+					if(peasant.getCargoAmount() + currentGold < desiredGold) {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestGoldID(loc, node.getState());
 						gold = node.getState().getResourceNode(closestResourceID);
@@ -324,7 +323,7 @@ public class ForwardPlanner extends Agent {
 						
 						goal.x = gold.getXPosition();
 						goal.y = gold.getYPosition();
-					} else if(currentWood < 200) {
+					} else if(currentWood < desiredWood) {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestWoodID(loc, node.getState());
 						wood = node.getState().getResourceNode(closestResourceID);
@@ -486,7 +485,6 @@ public class ForwardPlanner extends Agent {
 				literals.addAll(node.getStateLits());
 				
 				//generate remove list
-				//TODO remove just one At
 				ArrayList<Literal> remove = new ArrayList<Literal>();
 				for(Literal lit : node.getStateLits()) {
 					if(lit.getClass().toString().equals("class At")
@@ -562,7 +560,6 @@ public class ForwardPlanner extends Agent {
 					}
 				}
 			}
-			
 			
 			//move east
 			try {
@@ -869,19 +866,14 @@ public class ForwardPlanner extends Agent {
 		Act act = null;
 		for(Node node : solution) {
 			act = node.getToState();
-			outputPlan.println(act.getClass().toString());
-			switch(act.getClass().toString()) {
-			case "class Move":
+			//outputPlan.println(act.getClass().toString());
+			if(act.getClass().toString().equals("class Move")) {
 				outputPlan.println("Move " + ((Move)act).getDirectionString());
-				break;
-			case "class Deposit":
+			} else if(act.getClass().toString().equals("class Deposit")) {
 				outputPlan.println("Deposit " + ((Deposit)act).getAmount() + ((Deposit)act).getTypeString() + " at the Townhall");
-				break;
-			case "class Gather":
+			} else if(act.getClass().toString().equals("class Gather")) {
 				outputPlan.println("Gather " + ((Gather)act).getAmount() + ((Gather)act).getTypeString());
-				break;
 			}	
-				
 		}
 		
 		outputPlan.close();
