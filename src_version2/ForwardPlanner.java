@@ -229,7 +229,6 @@ public class ForwardPlanner extends Agent {
 				int closestResourceID;
 				
 				if(hasWood) {
-					//TODO check if this actually removes the right Has objects
 					//generate and remove the remove list
 					ArrayList<Literal> toRemove = new ArrayList<Literal>();
 					int woodAmt = 0;
@@ -269,7 +268,7 @@ public class ForwardPlanner extends Agent {
 							goalGold = ((Has)lit).getAmount();
 						}
 					}
-					if(peasant.getCargoAmount() + currentWood < goalWood) {
+					if(peasant.getCargoAmount() + currentWood < desiredWood) {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestWoodID(loc, node.getState());
 						wood = currentState.getResourceNode(closestResourceID);
@@ -504,7 +503,6 @@ public class ForwardPlanner extends Agent {
 				literals.addAll(node.getStateLits());
 				
 				//generate remove list
-				//TODO remove just one At
 				ArrayList<Literal> remove = new ArrayList<Literal>();
 				for(Literal lit : node.getStateLits()) {
 					if(lit.getClass().toString().equals("class At")
@@ -580,7 +578,6 @@ public class ForwardPlanner extends Agent {
 					}
 				}
 			}
-			
 			
 			//move east
 			try {
@@ -723,7 +720,7 @@ public class ForwardPlanner extends Agent {
 	
 	public int calculateHeuristicDistance(Node node, boolean hasResource, Point peasantLoc, Point townhallLoc, int neededResources) {
 		//relaxation: only collect from the closest resource
-		//and use Chevyshev distance, rather than true distance
+		//and use Chebyshev distance, rather than true distance
 		Point closestLoc = getClosestResourceLoc(node, peasantLoc);
 		int dist = 0;
 		if(neededResources > 0) {			
@@ -918,19 +915,14 @@ public class ForwardPlanner extends Agent {
 		Act act = null;
 		for(Node node : solution) {
 			act = node.getToState();
-			outputPlan.println(act.getClass().toString());
-			switch(act.getClass().toString()) {
-			case "class Move":
+			//outputPlan.println(act.getClass().toString());
+			if(act.getClass().toString().equals("class Move")) {
 				outputPlan.println("Move " + ((Move)act).getDirectionString());
-				break;
-			case "class Deposit":
+			} else if(act.getClass().toString().equals("class Deposit")) {
 				outputPlan.println("Deposit " + ((Deposit)act).getAmount() + ((Deposit)act).getTypeString() + " at the Townhall");
-				break;
-			case "class Gather":
+			} else if(act.getClass().toString().equals("class Gather")) {
 				outputPlan.println("Gather " + ((Gather)act).getAmount() + ((Gather)act).getTypeString());
-				break;
 			}	
-				
 		}
 		
 		outputPlan.close();

@@ -108,6 +108,13 @@ public class Node implements Comparable<Object>{
 			return 1;
 		}
 	}
+	
+//	@Override
+//	public boolean equals(Object o) {
+//		Node n = (Node)o;
+//		if(
+//		return false;
+//	}
 
 	public Point getUnitLoc(int unitID) {
 		for(Literal lit : stateLits) {
