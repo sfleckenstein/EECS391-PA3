@@ -123,7 +123,7 @@ public class Node implements Comparable<Object>{
 		for(Literal lit : stateLits) {
 			if(lit.getClass().toString().equals("class Has")
 					&& ((Has)lit).getHolderID() == townhallID 
-					&& ((Has)lit).getToHold() == ResourceType.GOLD) {
+					&& ((Has)lit).getResource() == ResourceType.GOLD) {
 				return ((Has) lit).getAmount();
 			}
 		}
@@ -134,7 +134,7 @@ public class Node implements Comparable<Object>{
 		for(Literal lit : stateLits) {
 			if(lit.getClass().toString().equals("class Has")
 					&& ((Has)lit).getHolderID() == townhallID 
-					&& ((Has)lit).getToHold() == ResourceType.WOOD) {
+					&& ((Has)lit).getResource() == ResourceType.WOOD) {
 				return ((Has) lit).getAmount();
 			}
 		}

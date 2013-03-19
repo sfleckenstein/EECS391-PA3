@@ -22,7 +22,7 @@ public class Has extends Literal {
 		return holderID;
 	}
 	
-	public ResourceType getToHold() {
+	public ResourceType getResource() {
 		return resource;
 	}
 	

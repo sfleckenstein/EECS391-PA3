@@ -178,7 +178,7 @@ public class ForwardPlanner extends Agent {
 				if(lit.getClass().toString().equals("class Has")
 						&& ((Has)lit).getHolderID() == peasantIds.get(0)) {
 					hasResource = true;
-					if(((Has)lit).getToHold() == ResourceType.WOOD) hasWood = true;
+					if(((Has)lit).getResource() == ResourceType.WOOD) hasWood = true;
 					break;
 				}
 			}
@@ -192,7 +192,7 @@ public class ForwardPlanner extends Agent {
 			for(Literal goalLiteral : goalLits) {
 				if(goalLiteral.getClass().toString().equals("class Has")
 						&& ((Has)goalLiteral).getHolderID() == townhallIds.get(0)) {
-					if(((Has)goalLiteral).getToHold() == ResourceType.WOOD) {
+					if(((Has)goalLiteral).getResource() == ResourceType.WOOD) {
 						desiredWood = ((Has)goalLiteral).getAmount();
 					} else {
 						desiredGold = ((Has)goalLiteral).getAmount();
@@ -202,11 +202,11 @@ public class ForwardPlanner extends Agent {
 			for(Literal literal : node.getStateLits()) {
 				if(literal.getClass().toString().equals("class Has")
 						&& ((Has)literal).getHolderID() == townhallIds.get(0)) {
-					if(((Has)literal).getToHold() == ResourceType.WOOD
+					if(((Has)literal).getResource() == ResourceType.WOOD
 							&& desiredWood > ((Has)literal).getAmount()) {
 						needWood = true;
 						neededWood = ((Has)literal).getAmount();
-					} else if(((Has)literal).getToHold() == ResourceType.GOLD
+					} else if(((Has)literal).getResource() == ResourceType.GOLD
 							&& desiredGold > ((Has)literal).getAmount()) {
 						needGold = true;
 						neededGold = ((Has)literal).getAmount();
@@ -215,7 +215,7 @@ public class ForwardPlanner extends Agent {
 			}
 			
 			//Deposit Gold/Wood
-			if(hasResource && areAdjacent(node, peasantIds.get(0), townhallIds.get(0))) { //preconditions
+			if(hasResource && areAdjacent(true, node, peasantIds.get(0), townhallIds.get(0))) { //preconditions
 				peasant = node.getState().getUnit(peasantIds.get(0));
 				literals = new ArrayList<Literal>();
 				literals.addAll(node.getStateLits());
@@ -245,7 +245,7 @@ public class ForwardPlanner extends Agent {
 					for(Literal lit: literals) {
 						if(lit.getClass().toString().equals("class Has")
 								&& ((Has)lit).getHolderID() == townhallIds.get(0)
-								&& ((Has)lit).getToHold() == ResourceType.WOOD) {
+								&& ((Has)lit).getResource() == ResourceType.WOOD) {
 							((Has)lit).setAmount(((Has)lit).getAmount() + woodAmt); //alter how much the townhall has
 						}
 					}
@@ -259,8 +259,17 @@ public class ForwardPlanner extends Agent {
 					nextState.addResourceAmount(0, ResourceType.WOOD, peasant.getCargoAmount());
 					nextState.getUnit(peasantIds.get(0)).setCargo(null, 0);//TODO is null ok here?
 					
-					//TODO get rid of the 200 stuff
-					if(peasant.getCargoAmount() + currentWood < 200) {
+					int goalWood = 200;
+					int goalGold = 200;
+					for(Literal lit : goalLits) {
+						if(((Has)lit).getResource().equals(ResourceType.WOOD)) {
+							goalWood = ((Has)lit).getAmount();
+						}
+						if(((Has)lit).getResource().equals(ResourceType.GOLD)) {
+							goalGold = ((Has)lit).getAmount();
+						}
+					}
+					if(peasant.getCargoAmount() + currentWood < goalWood) {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestWoodID(loc, node.getState());
 						wood = currentState.getResourceNode(closestResourceID);
@@ -269,7 +278,7 @@ public class ForwardPlanner extends Agent {
 						
 						goal.x = wood.getXPosition();
 						goal.y = wood.getYPosition();
-					} else if(currentGold < 200) {
+					} else if(currentGold < goalGold) {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestGoldID(loc, node.getState());
 						gold = currentState.getResourceNode(closestResourceID);
@@ -300,7 +309,7 @@ public class ForwardPlanner extends Agent {
 					for(Literal lit: literals) {
 						if(lit.getClass().toString().equals("class Has")
 								&& ((Has)lit).getHolderID() == townhallIds.get(0)
-								&& ((Has)lit).getToHold() == ResourceType.GOLD) {
+								&& ((Has)lit).getResource() == ResourceType.GOLD) {
 							((Has)lit).setAmount(((Has)lit).getAmount() + goldAmt); //alter how much the townhall has
 						}
 					}
@@ -313,8 +322,19 @@ public class ForwardPlanner extends Agent {
 					
 					nextState.addResourceAmount(0, ResourceType.GOLD, peasant.getCargoAmount());
 					nextState.getUnit(peasantIds.get(0)).setCargo(null, 0);
-					//TODO get rid of 200 stuff
-					if(peasant.getCargoAmount() + currentGold < 200) {
+
+					int goalWood = 200;
+					int goalGold = 200;
+					for(Literal lit : goalLits) {
+						if(((Has)lit).getResource().equals(ResourceType.WOOD)) {
+							goalWood = ((Has)lit).getAmount();
+						}
+						if(((Has)lit).getResource().equals(ResourceType.GOLD)) {
+							goalGold = ((Has)lit).getAmount();
+						}
+					}
+					
+					if(peasant.getCargoAmount() + currentGold < goalGold) {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestGoldID(loc, node.getState());
 						gold = node.getState().getResourceNode(closestResourceID);
@@ -324,7 +344,7 @@ public class ForwardPlanner extends Agent {
 						
 						goal.x = gold.getXPosition();
 						goal.y = gold.getYPosition();
-					} else if(currentWood < 200) {
+					} else if(currentWood < goalWood) {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestWoodID(loc, node.getState());
 						wood = node.getState().getResourceNode(closestResourceID);
@@ -353,8 +373,6 @@ public class ForwardPlanner extends Agent {
 					}
 				}
 			}
-				
-			
 			
 			//Gather Gold/Wood
 			if(needWood && !hasResource) {
@@ -475,7 +493,7 @@ public class ForwardPlanner extends Agent {
 			int nextY = node.getUnitLoc(peasantIds.get(0)).y;
 			
 			int estimatedCost = calculateHeuristicDistance(node, true,
-					new Point(nextX, nextY), node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
+					new Point(nextX, nextY), node.getUnitLoc(townhallIds.get(0)), neededWood + neededGold);
 			
 			Move move = new Move(Direction.WEST);
 			
@@ -835,6 +853,37 @@ public class ForwardPlanner extends Agent {
 	}
 	
 	public boolean areAdjacent(Node node, int objOneId, int objTwoId) {
+		for(Literal lit1 : node.getStateLits()) {
+			if(lit1.getClass().toString().equals("class At")) {
+				for(Literal lit2 : node.getStateLits()) {
+					if(lit2.getClass().toString().equals("class At")) {
+						
+						At at1 = (At)lit1;
+						At at2 = (At)lit2;
+						
+						if(at1.getObjectID() == objOneId
+								&& at2.getObjectID() == objTwoId) {
+							Point p1 = at1.getPosition();
+							Point p2 = at2.getPosition();
+							
+							if(Math.abs(p1.getX() - p2.getX()) <=1
+									&& Math.abs(p1.getY() - p2.getY()) <=1 ) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean areAdjacent(boolean b, Node node, int objOneId, int objTwoId) {
+		Literal literal = node.getStateLits().get(11);
+		if(literal.getClass().toString().equals("class At")) {
+			Point p = ((At)literal).getPosition();
+			System.out.println(literal + ": " + p);
+		}
 		for(Literal lit1 : node.getStateLits()) {
 			if(lit1.getClass().toString().equals("class At")) {
 				for(Literal lit2 : node.getStateLits()) {
