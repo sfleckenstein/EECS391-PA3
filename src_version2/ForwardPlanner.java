@@ -49,7 +49,7 @@ import edu.cwru.sepia.util.Direction;
 public class ForwardPlanner extends Agent {
 	private static final long serialVersionUID = -4047208702628325380L;
 	private static final Logger logger = Logger.getLogger(ForwardPlanner.class.getCanonicalName());
-	public static final int GATHER_AMOUNT = 100;	//TODO find the correct amount
+	public static final int GATHER_AMOUNT = 100;
 
 	private int step;
 	private int currentGoal;
@@ -187,6 +187,8 @@ public class ForwardPlanner extends Agent {
 			boolean needGold = false;
 			int desiredWood = 0;
 			int desiredGold = 0;
+			int neededWood = 0;
+			int neededGold = 0;
 			for(Literal goalLiteral : goalLits) {
 				if(goalLiteral.getClass().toString().equals("class Has")
 						&& ((Has)goalLiteral).getHolderID() == townhallIds.get(0)) {
@@ -203,9 +205,11 @@ public class ForwardPlanner extends Agent {
 					if(((Has)literal).getToHold() == ResourceType.WOOD
 							&& desiredWood > ((Has)literal).getAmount()) {
 						needWood = true;
+						neededWood = ((Has)literal).getAmount();
 					} else if(((Has)literal).getToHold() == ResourceType.GOLD
 							&& desiredGold > ((Has)literal).getAmount()) {
 						needGold = true;
+						neededGold = ((Has)literal).getAmount();
 					}
 				}
 			}
@@ -260,9 +264,8 @@ public class ForwardPlanner extends Agent {
 						Point loc = node.getUnitLoc(peasantIds.get(0));
 						closestResourceID = getClosestWoodID(loc, node.getState());
 						wood = currentState.getResourceNode(closestResourceID);
-						//TODO fix all the heuristic distance function calls
 						estimatedCost = calculateHeuristicDistance(node, true, node.getUnitLoc(peasantIds.get(0)), 
-								node.getUnitLoc(peasantIds.get(0)), );
+								node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
 						
 						goal.x = wood.getXPosition();
 						goal.y = wood.getYPosition();
@@ -271,8 +274,8 @@ public class ForwardPlanner extends Agent {
 						closestResourceID = getClosestGoldID(loc, node.getState());
 						gold = currentState.getResourceNode(closestResourceID);
 						
-						estimatedCost = calculateHeuristicDistance(node.getUnitLoc(peasantIds.get(0)).x, node.getUnitLoc(peasantIds.get(0)).y, 
-								gold.getXPosition(), gold.getYPosition());
+						estimatedCost = calculateHeuristicDistance(node, true, node.getUnitLoc(peasantIds.get(0)), 
+								node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
 						
 						goal.x = gold.getXPosition();
 						goal.y = gold.getYPosition();
@@ -316,8 +319,8 @@ public class ForwardPlanner extends Agent {
 						closestResourceID = getClosestGoldID(loc, node.getState());
 						gold = node.getState().getResourceNode(closestResourceID);
 						
-						estimatedCost = calculateHeuristicDistance(node.getUnitLoc(peasantIds.get(0)).x, node.getUnitLoc(peasantIds.get(0)).y, 
-								gold.getXPosition(), gold.getYPosition());
+						estimatedCost = calculateHeuristicDistance(node, true, node.getUnitLoc(peasantIds.get(0)), 
+								node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
 						
 						goal.x = gold.getXPosition();
 						goal.y = gold.getYPosition();
@@ -326,8 +329,8 @@ public class ForwardPlanner extends Agent {
 						closestResourceID = getClosestWoodID(loc, node.getState());
 						wood = node.getState().getResourceNode(closestResourceID);
 						
-						estimatedCost = calculateHeuristicDistance(node.getUnitLoc(peasantIds.get(0)).x, node.getUnitLoc(peasantIds.get(0)).y, 
-								wood.getXPosition(), wood.getYPosition());
+						estimatedCost = calculateHeuristicDistance(node, true, node.getUnitLoc(peasantIds.get(0)), 
+								node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
 						
 						goal.x = wood.getXPosition();
 						goal.y = wood.getYPosition();
@@ -390,8 +393,9 @@ public class ForwardPlanner extends Agent {
 					goal.x = townhall.getXPosition();
 					goal.y = townhall.getYPosition();
 					
-					int estimatedCost = calculateHeuristicDistance(node.getUnitLoc(peasantIds.get(0)).x, node.getUnitLoc(peasantIds.get(0)).y, goal.x, goal.y);
-
+					int estimatedCost = calculateHeuristicDistance(node, false, node.getUnitLoc(peasantIds.get(0)), 
+							node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
+					
 					Node n = new Node(nextState.getView(0), node, gather, literals, 
 							node.getCostToNode() + 1, goal, estimatedCost);
 					
@@ -440,8 +444,9 @@ public class ForwardPlanner extends Agent {
 					goal.x = townhall.getXPosition();
 					goal.y = townhall.getYPosition();
 					
-					int estimatedCost = calculateHeuristicDistance(node.getUnitLoc(peasantIds.get(0)).x, node.getUnitLoc(peasantIds.get(0)).y, goal.x, goal.y);
-
+					int estimatedCost = calculateHeuristicDistance(node, false, node.getUnitLoc(peasantIds.get(0)), 
+							node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
+					
 					Node n = new Node(nextState.getView(0), node, gather, literals, 
 							node.getCostToNode() + 1, goal, estimatedCost);
 					
@@ -466,12 +471,13 @@ public class ForwardPlanner extends Agent {
 			
 			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.WEST);
 			
-			int estimatedCost = calculateHeuristicDistance(peasant.getXPosition() - 1, peasant.getYPosition(), 
-					node.getGoal().x, node.getGoal().y);
-			Move move = new Move(Direction.WEST);
-
 			int nextX = node.getUnitLoc(peasantIds.get(0)).x - 1;
 			int nextY = node.getUnitLoc(peasantIds.get(0)).y;
+			
+			int estimatedCost = calculateHeuristicDistance(node, true,
+					new Point(nextX, nextY), node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
+			
+			Move move = new Move(Direction.WEST);
 			
 			if(node.getState().inBounds(nextX, nextY) 
 					&& !node.getState().isResourceAt(nextX, nextY)
@@ -515,13 +521,14 @@ public class ForwardPlanner extends Agent {
 			}
 			
 			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.NORTH);
-			
-			estimatedCost = calculateHeuristicDistance(node.getUnitLoc(peasantIds.get(0)).x, node.getUnitLoc(peasantIds.get(0)).y - 1, 
-					node.getGoal().x, node.getGoal().y);
-			move = new Move(Direction.NORTH);
-			
+
 			nextX = node.getUnitLoc(peasantIds.get(0)).x;
 			nextY = node.getUnitLoc(peasantIds.get(0)).y - 1;
+			
+			estimatedCost = calculateHeuristicDistance(node, true,
+					new Point(nextX, nextY), node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
+			
+			move = new Move(Direction.NORTH);
 
 			if(node.getState().inBounds(nextX, nextY)
 						&& !node.getState().isResourceAt(nextX, nextY)
@@ -566,12 +573,13 @@ public class ForwardPlanner extends Agent {
 			
 			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.EAST);
 			
-			estimatedCost = calculateHeuristicDistance(node.getUnitLoc(peasantIds.get(0)).x + 1, node.getUnitLoc(peasantIds.get(0)).y, 
-					node.getGoal().x, node.getGoal().y);
-			move = new Move(Direction.EAST);
-			
 			nextX = node.getUnitLoc(peasantIds.get(0)).x + 1;
 			nextY = node.getUnitLoc(peasantIds.get(0)).y;
+
+			estimatedCost = calculateHeuristicDistance(node, true,
+					new Point(nextX, nextY), node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
+			
+			move = new Move(Direction.EAST);
 
 			if(node.getState().inBounds(nextX, nextY)
 					&& !node.getState().isResourceAt(nextX, nextY)
@@ -615,12 +623,13 @@ public class ForwardPlanner extends Agent {
 			
 			nextState.moveUnit(nextState.getUnit(peasantIds.get(0)), Direction.SOUTH);
 			
-			estimatedCost = calculateHeuristicDistance(node.getUnitLoc(peasantIds.get(0)).x, node.getUnitLoc(peasantIds.get(0)).y + 1, 
-					node.getGoal().x, node.getGoal().y);
-			move = new Move(Direction.SOUTH);
-			
 			nextX = node.getUnitLoc(peasantIds.get(0)).x;
 			nextY = node.getUnitLoc(peasantIds.get(0)).y + 1;
+
+			estimatedCost = calculateHeuristicDistance(node, true,
+					new Point(nextX, nextY), node.getUnitLoc(townhallIds.get(0)), neededWood+neededGold);
+			
+			move = new Move(Direction.SOUTH);
 
 			if(node.getState().inBounds(nextX, nextY)
 					&& !node.getState().isResourceAt(nextX, nextY)
