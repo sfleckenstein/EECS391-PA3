@@ -20,5 +20,26 @@ public class Move extends Act {
 	public Direction getDirection() {
 		return direction;
 	}
+	
+	public String getDirectionString() {
+		String str;
+		switch(direction) {
+		case NORTH:
+			str = "NORTH";
+			break;
+		case EAST:
+			str = "EAST";
+			break;
+		case SOUTH:
+			str = "SOUTH";
+			break;
+		case WEST:
+			str = "WEST";
+			break;
+		default:
+			str = "";
+		}
+		return str;
+	}
 
 }

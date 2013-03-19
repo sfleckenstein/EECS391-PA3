@@ -1,6 +1,7 @@
 import java.awt.Point;
 import java.util.ArrayList;
 
+import edu.cwru.sepia.environment.model.state.ResourceType;
 import edu.cwru.sepia.environment.model.state.State.StateView;
 
 
@@ -108,14 +109,36 @@ public class Node implements Comparable<Object>{
 		}
 	}
 
-	public Point getPeasantLoc() {
+	public Point getUnitLoc(int unitID) {
 		for(Literal lit : stateLits) {
 			if(lit.getClass().toString().equals("class At")
-					&& ((At)lit).getObjectID() == 1) {	//TODO 1 should be change to peasantIds.get(0) or something like that
+					&& ((At)lit).getObjectID() == unitID) {
 				return ((At)lit).getPosition();
 			}
 		}
 		return null;
+	}
+	
+	public int getTownHallGold(int townhallID) {
+		for(Literal lit : stateLits) {
+			if(lit.getClass().toString().equals("class Has")
+					&& ((Has)lit).getHolderID() == townhallID 
+					&& ((Has)lit).getToHold() == ResourceType.GOLD) {
+				return ((Has) lit).getAmount();
+			}
+		}
+		return -1;
+	}
+	
+	public int getTownHallWood(int townhallID) {
+		for(Literal lit : stateLits) {
+			if(lit.getClass().toString().equals("class Has")
+					&& ((Has)lit).getHolderID() == townhallID 
+					&& ((Has)lit).getToHold() == ResourceType.WOOD) {
+				return ((Has) lit).getAmount();
+			}
+		}
+		return -1;
 	}
 
 }
