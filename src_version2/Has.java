@@ -1,37 +1,27 @@
 import edu.cwru.sepia.environment.model.state.ResourceType;
 
-
 public class Has extends Literal {
 	
-	private int holderID;
+	private int objectID;
 	private ResourceType resource;
 	private int amount;
-	
-	/**
-	 * 
-	 * @param holderID - ID of the holder
-	 * @param resource - Resource they are holding
-	 */
-	public Has(int holderID, ResourceType resource, int amount) {
-		this.holderID = holderID;
+
+	public Has(int objectID, ResourceType resource, int amount) {
+		this.objectID = objectID;
 		this.resource = resource;
 		this.amount = amount;
 	}
 
-	public int getHolderID() {
-		return holderID;
+	public int getObjectID() {
+		return objectID;
 	}
 	
-	public ResourceType getToHold() {
+	public ResourceType getResource() {
 		return resource;
 	}
 	
 	public int getAmount() {
 		return amount;
-	}
-	
-	public void setAmount(int amount) {
-		this.amount = amount;
 	}
 	
 	@Override
@@ -40,7 +30,7 @@ public class Has extends Literal {
 			return false;
 		}
 		Has h = (Has)o;
-		if(h.holderID == this.holderID && h.resource.equals(this.resource) && h.amount == this.amount) {
+		if(h.objectID == this.objectID && h.resource.equals(this.resource) && h.amount == this.amount) {
 			return true;
 		}
 		return false;

@@ -1,46 +1,29 @@
-import java.awt.Point;
 import java.util.ArrayList;
-
-import edu.cwru.sepia.environment.model.state.ResourceType;
-import edu.cwru.sepia.environment.model.state.State.StateView;
-
 
 public class Node implements Comparable<Object>{
 	
-	private StateView state;
 	private Node parent;
 	private Act toState;
 	private ArrayList<Literal> stateLits;
 	private int costToNode;
-	private Point goal;
 	private int costToGoal;
-//	private Point peasantLoc;
 
 	/**
 	 * 
-	 * @param state - The state of the node
 	 * @param parent - The parent of the node
 	 * @param toState - The Act made to get to the state
 	 * @param stateLits - The state literals
 	 * @param costToNode - The total cost to get to the node
-	 * @param goal - The location of the goal
 	 * @param costToGoal - The estimated cost to the goal
 	 * @param peasantLoc - The location of the peasant
 	 */
-	public Node(StateView state, Node parent, Act toState, ArrayList<Literal> stateLits, 
-			int costToNode, Point goal, int costToGoal) {
-		this.state = state;
+	public Node(Node parent, Act toState, ArrayList<Literal> stateLits, 
+			int costToNode, int costToGoal) {
 		this.parent = parent;
 		this.toState = toState;
 		this.stateLits = stateLits;
 		this.costToNode = costToNode;
-		this.goal = goal;
 		this.costToGoal = costToGoal;
-//		this.peasantLoc = new Point((int)peasantLoc.getX(), (int)peasantLoc.getY());
-	}
-	
-	public StateView getState() {
-		return state;
 	}
 	
 	public Node getParentNode() {
@@ -59,14 +42,6 @@ public class Node implements Comparable<Object>{
 		this.costToNode = costToNode;
 	}
 	
-	public Point getGoal() {
-		return goal;
-	}
-	
-	public void setGoal(Point goal) {
-		this.goal = goal;
-	}
-	
 	public int getCostToGoal() {
 		return costToGoal;
 	}
@@ -79,11 +54,11 @@ public class Node implements Comparable<Object>{
 		return stateLits;
 	}
 	
-	/**
-	 * 
-	 * @param toFind - The literal you are searching for
-	 * @return True if the node contains the queried literal.
-	 */
+//	/**
+//	 * 
+//	 * @param toFind - The literal you are searching for
+//	 * @return True if the node contains the queried literal.
+//	 */
 	public boolean containsLit(Literal toFind) {
 		String toFindClass = toFind.getClass().toString();
 		for(Literal stateLit : stateLits) {
@@ -116,36 +91,36 @@ public class Node implements Comparable<Object>{
 //		return false;
 //	}
 
-	public Point getUnitLoc(int unitID) {
-		for(Literal lit : stateLits) {
-			if(lit.getClass().toString().equals("class At")
-					&& ((At)lit).getObjectID() == unitID) {
-				return ((At)lit).getPosition();
-			}
-		}
-		return null;
-	}
+//	public Point getUnitLoc(int unitID) {
+//		for(Literal lit : stateLits) {
+//			if(lit.getClass().toString().equals("class At")
+//					&& ((At)lit).getObjectID() == unitID) {
+//				return ((At)lit).getPosition();
+//			}
+//		}
+//		return null;
+//	}
 	
-	public int getTownHallGold(int townhallID) {
-		for(Literal lit : stateLits) {
-			if(lit.getClass().toString().equals("class Has")
-					&& ((Has)lit).getHolderID() == townhallID 
-					&& ((Has)lit).getToHold() == ResourceType.GOLD) {
-				return ((Has) lit).getAmount();
-			}
-		}
-		return -1;
-	}
-	
-	public int getTownHallWood(int townhallID) {
-		for(Literal lit : stateLits) {
-			if(lit.getClass().toString().equals("class Has")
-					&& ((Has)lit).getHolderID() == townhallID 
-					&& ((Has)lit).getToHold() == ResourceType.WOOD) {
-				return ((Has) lit).getAmount();
-			}
-		}
-		return -1;
-	}
+//	public int getTownHallGold(int townhallID) {
+//		for(Literal lit : stateLits) {
+//			if(lit.getClass().toString().equals("class Has")
+//					&& ((Has)lit).getHolderID() == townhallID 
+//					&& ((Has)lit).getToHold() == ResourceType.GOLD) {
+//				return ((Has) lit).getAmount();
+//			}
+//		}
+//		return -1;
+//	}
+//	
+//	public int getTownHallWood(int townhallID) {
+//		for(Literal lit : stateLits) {
+//			if(lit.getClass().toString().equals("class Has")
+//					&& ((Has)lit).getHolderID() == townhallID 
+//					&& ((Has)lit).getToHold() == ResourceType.WOOD) {
+//				return ((Has) lit).getAmount();
+//			}
+//		}
+//		return -1;
+//	}
 
 }

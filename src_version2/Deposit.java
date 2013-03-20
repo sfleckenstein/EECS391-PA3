@@ -1,37 +1,32 @@
-import edu.cwru.sepia.action.Action;
-import edu.cwru.sepia.action.ActionType;
-import edu.cwru.sepia.action.DirectedAction;
 import edu.cwru.sepia.environment.model.state.ResourceType;
-import edu.cwru.sepia.util.Direction;
-
 
 public class Deposit extends Act {
 
+	private int depositID;
+	private ResourceType resource;
 	private int amount;
-	private Direction directionToTownHall;
-	private ResourceType type;
 	
-	public Deposit(int amount, Direction dirToTH, ResourceType type) {
+	public Deposit(int depositID, ResourceType resource, int amount) {
+		this.depositID = depositID;
+		this.resource = resource;
 		this.amount = amount;
-		this.directionToTownHall = dirToTH;
-		this.type = type;
+	}
+
+	public int getDepositID() {
+		return depositID;
+	}
+	
+	public ResourceType getResourcee() {
+		return resource;
 	}
 	
 	public int getAmount() {
 		return amount;
 	}
 	
-	public Direction getDirectionToTownHall() {
-		return directionToTownHall;
-	}
-	
-	public ResourceType getResourceType() {
-		return type;
-	}
-	
-	public String getTypeString() {
+	public String getResourceString() {
 		String str;
-		switch(type) {
+		switch(resource) {
 		case GOLD:
 			str = "GOLD";
 			break;
@@ -43,11 +38,4 @@ public class Deposit extends Act {
 		}
 		return str;
 	}
-	
-	@Override
-	public Action act(int peasantId) {
-		return new DirectedAction(peasantId, ActionType.PRIMITIVEDEPOSIT, directionToTownHall);
-	}
-
-
 }
