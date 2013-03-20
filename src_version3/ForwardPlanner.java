@@ -23,7 +23,6 @@ d *  Strategy Engine for Programming Intelligent Agents (SEPIA)
 import java.awt.Point;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -37,15 +36,12 @@ import java.util.logging.Logger;
 
 import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.action.ActionType;
-import edu.cwru.sepia.action.DirectedAction;
-import edu.cwru.sepia.action.LocatedAction;
 import edu.cwru.sepia.action.TargetedAction;
 import edu.cwru.sepia.agent.Agent;
 import edu.cwru.sepia.environment.model.history.History;
 import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.environment.model.state.ResourceNode.Type;
 import edu.cwru.sepia.environment.model.state.ResourceType;
-import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.State.StateView;
 import edu.cwru.sepia.environment.model.state.Unit.UnitView;
 import edu.cwru.sepia.util.Direction;
@@ -102,12 +98,14 @@ public class ForwardPlanner extends Agent {
 		//initial state
 		initLits.add(new Has(townhallIds.get(0), ResourceType.GOLD, 0)); //town has no gold
 		initLits.add(new Has(townhallIds.get(0), ResourceType.WOOD, 0)); //town has no wood
+		//TODO what does this mean?
 		initLits.add(new AtTownHall(peasantIds.get(0))); //peasant starts at the townhall
 
 		//goal state
 		goalLits.add(new Has(townhallIds.get(0), ResourceType.GOLD, 200));
 		goalLits.add(new Has(townhallIds.get(0), ResourceType.WOOD, 200));
 		
+		//TODO should this go in while(true)?
 		int goalGoldAmt = 0;
 		int goalWoodAmt = 0;
 		for(Literal goalLit : goalLits) { 				
@@ -120,7 +118,6 @@ public class ForwardPlanner extends Agent {
 				}
 			}
 		}
-		
 		
 		int estimatedCost = 0; //TODO fix to use heuristic
 		
@@ -381,10 +378,8 @@ public class ForwardPlanner extends Agent {
 			Action b = null;
 			Node poll = solution.poll();
 			String actString = poll.getToState().getClass().toString();
-			
-			if(actString.equals("class Deposit")) {	//TODO is this necessary? Just use GotoTownHall	
-				b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDDEPOSIT, townhallIds.get(0));
-			} else if(actString.equals("class GotoTownHall")){
+		
+			if(actString.equals("class GotoTownHall")){
 				b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDDEPOSIT, townhallIds.get(0));
 			} else if(actString.equals("class GotoResource")) {
 				ResourceType resource = ((GotoResource)poll.getToState()).getResource();
@@ -394,21 +389,12 @@ public class ForwardPlanner extends Agent {
 					//TODO change currentState to poll.getState() or something like that
 					UnitView peasant = currentState.getUnit(peasantIds.get(0));
 					int goldId = getClosestGoldID(new Point(peasant.getXPosition(), peasant.getYPosition()), currentState);
-//					
-//					ResourceView gold = currentState.getResourceNode(goldId);
-//					b = new LocatedAction(peasantIds.get(0), ActionType.COMPOUNDMOVE, gold.getXPosition(), gold.getYPosition());
-				
 					b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDGATHER, goldId);
-				
 				} else if(resource.equals(ResourceType.WOOD)) {
 					//goto nearest wood
 					//TODO change currentState to poll.getState() or something like that
 					UnitView peasant = currentState.getUnit(peasantIds.get(0));
 					int woodId = getClosestWoodID(new Point(peasant.getXPosition(), peasant.getYPosition()), currentState);
-					
-//					ResourceView wood = currentState.getResourceNode(woodId);
-//					b = new LocatedAction(peasantIds.get(0), ActionType.COMPOUNDMOVE, wood.getXPosition(), wood.getYPosition());
-					
 					b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDGATHER, woodId);
 				}
 				
