@@ -122,7 +122,7 @@ public class ForwardPlanner extends Agent {
 		}
 		
 		
-		int estimatedCost = 0; //TODO fix to use heuristic
+		int estimatedCost = heuristic(goalGoldAmt, goalWoodAmt, false, false);
 		
 		Node root = new Node(null, null, initLits, 0, estimatedCost);
 		
@@ -155,16 +155,20 @@ public class ForwardPlanner extends Agent {
 			
 			closed.add(node);
 			
-			//TODO set needGold/Wood properly
+			//determine resources still needed
 			boolean needGold = false;
 			boolean needWood = false;
+			int neededGold = 0; //according to the townhall
+			int neededWood = 0;
 			for(Literal literal : node.getStateLits()) {
 				if(literal.getClass().toString().equals("class Has")
-						&& ((Has)literal).getObjectID() == peasantIds.get(0)) {
+						&& ((Has)literal).getObjectID() == townhallIds.get(0)) {
 					if(((Has)literal).getResource().equals(ResourceType.GOLD)) {
-						if(((Has)literal).getAmount() < goalGoldAmt) needGold = true;
+						neededGold = ((Has)literal).getAmount();
+						if(neededGold < goalGoldAmt) needGold = true;
 					} else if(((Has)literal).getResource().equals(ResourceType.GOLD)) {
-						if(((Has)literal).getAmount() < goalWoodAmt) needWood = true;
+						neededWood = ((Has)literal).getAmount();
+						if(neededWood < goalWoodAmt) needWood = true;
 					}
 				}
 			}
@@ -182,7 +186,7 @@ public class ForwardPlanner extends Agent {
 					}
 					literalsGold.add(new AtResource(peasantIds.get(0), ResourceType.GOLD)); //add list
 					
-					estimatedCost = 0; //TODO fix to use heuristic
+					estimatedCost = heuristic(neededGold, neededWood, false, false);
 					
 					Node n = new Node(node, new GotoResource(peasantIds.get(0), ResourceType.GOLD),
 							literalsGold, node.getCostToNode() + 1, estimatedCost);
@@ -206,7 +210,7 @@ public class ForwardPlanner extends Agent {
 					}
 					literalsWood.add(new AtResource(peasantIds.get(0), ResourceType.GOLD)); //add list
 					
-					estimatedCost = 0; //TODO fix to use heuristic
+					estimatedCost = heuristic(neededGold, neededWood, false, false);
 					
 					Node n = new Node(node, new GotoResource(peasantIds.get(0), ResourceType.GOLD),
 							literalsWood, node.getCostToNode() + 1, estimatedCost);
@@ -237,7 +241,7 @@ public class ForwardPlanner extends Agent {
 				}
 				literals.add(new AtResource(peasantIds.get(0), ResourceType.GOLD)); //add list
 				
-				estimatedCost = 0; //TODO fix to use heuristic
+				estimatedCost = heuristic(neededGold, neededWood, true, true);
 				
 				Node n = new Node(node, new GotoTownHall(peasantIds.get(0)),
 						literals, node.getCostToNode() + 1, estimatedCost);
@@ -269,7 +273,7 @@ public class ForwardPlanner extends Agent {
 						}
 					}
 					
-					estimatedCost = 0;//TODO fix to use heuristic
+					estimatedCost = heuristic(neededGold, neededWood, false, true);
 					
 					Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT),
 							literalsGold, node.getCostToNode() + 1, estimatedCost);
@@ -298,7 +302,7 @@ public class ForwardPlanner extends Agent {
 						}
 					}
 					
-					estimatedCost = 0; //TODO fix to use heuristic
+					estimatedCost = heuristic(neededGold, neededWood, false, true);
 					
 					Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT),
 							literalsWood, node.getCostToNode() + 1, estimatedCost);
@@ -326,7 +330,7 @@ public class ForwardPlanner extends Agent {
 					
 					literalsGold.add(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT)); //add list
 					
-					estimatedCost = 0; //TODO fix to use heuristic
+					estimatedCost = heuristic(neededGold, neededWood, true, false);
 					
 					Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT),
 							literalsGold, node.getCostToNode() + 1, estimatedCost);
@@ -349,7 +353,7 @@ public class ForwardPlanner extends Agent {
 					
 					literalsWood.add(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT)); //add list
 					
-					estimatedCost = 0; //TODO fix to use heuristic
+					estimatedCost = heuristic(neededGold, neededWood, true, false);
 					
 					Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT),
 							literalsWood, node.getCostToNode() + 1, estimatedCost);
@@ -439,22 +443,15 @@ public class ForwardPlanner extends Agent {
 		}
 	}
 	
-	//TODO fix the heuristic
-	public int calculateHeuristicDistance(Node node, boolean hasResource, Point peasantLoc, Point townhallLoc, int neededResources) {
+	public int heuristic(int neededGold, int neededWood, boolean hasResource, boolean atTownhall) {
+		int amountNeeded = neededGold + neededWood;
 		int dist = 0;
-//		if(neededResources > 0) {			
-//			if(hasResource) { //heading toward townhall
-//				dist += chebyshevDistance(peasantLoc, townhallLoc);
-//				neededResources -= GATHER_AMOUNT;
-//			} else { //heading toward resource
-//				dist += chebyshevDistance(peasantLoc, closestLoc) + chebyshevDistance(closestLoc, townhallLoc);
-//				neededResources -= GATHER_AMOUNT;
-//			}
-//			while(neededResources > 0) {
-//				dist += 2 * chebyshevDistance(closestLoc, townhallLoc);
-//				neededResources -= GATHER_AMOUNT;
-//			}
-//		}
+		if(hasResource) {
+			dist++; //deposit action
+			amountNeeded -= GATHER_AMOUNT;
+			if(!atTownhall) dist++; //move to townhall
+		}
+		dist += 4 * (amountNeeded / GATHER_AMOUNT);
 		return dist;
 	}
 
