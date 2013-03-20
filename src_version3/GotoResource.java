@@ -1,41 +1,37 @@
 import edu.cwru.sepia.environment.model.state.ResourceType;
 
-public class Gather extends Act {
-
-	private int gatherID;
-	private int amount;
+public class GotoResource extends Act {
+	
+	private int moverID;
 	private ResourceType resource;
 	
-	public Gather(int gatherID, ResourceType resource, int amount) {
-		this.gatherID = gatherID;
+	
+	public GotoResource(int moverID, ResourceType resource) {
+		this.moverID = moverID;
 		this.resource = resource;
-		this.amount = amount;
 	}
 
-	public int getGatherID() {
-		return gatherID;
+	public int getMoverID() {
+		return moverID;
 	}
 	
 	public ResourceType getResource() {
 		return resource;
 	}
 	
-	public int getAmount() {
-		return amount;
-	}
-	
 	public String getResourceString() {
 		String str;
 		switch(resource) {
 		case GOLD:
-			str = "GOLD";
+			str = "GOLD MINE";
 			break;
 		case WOOD:
-			str = "WOOD";
+			str = "FOREST";
 			break;
 		default:
 			str = "";
 		}
 		return str;
 	}
+
 }

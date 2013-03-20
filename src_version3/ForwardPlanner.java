@@ -36,6 +36,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.cwru.sepia.action.Action;
+import edu.cwru.sepia.action.ActionType;
+import edu.cwru.sepia.action.DirectedAction;
+import edu.cwru.sepia.action.LocatedAction;
+import edu.cwru.sepia.action.TargetedAction;
 import edu.cwru.sepia.agent.Agent;
 import edu.cwru.sepia.environment.model.history.History;
 import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
@@ -165,30 +169,6 @@ public class ForwardPlanner extends Agent {
 				}
 			}
 			
-<<<<<<< HEAD
-			//Deposit Gold/Wood
-			if(hasResource && areAdjacent(node, peasantIds.get(0), townhallIds.get(0))) { //preconditions
-				peasant = node.getState().getUnit(peasantIds.get(0));
-				literals = new ArrayList<Literal>();
-				literals.addAll(node.getStateLits());
-				
-				Deposit deposit = new Deposit(peasant.getCargoAmount(),
-						getDirectionBetween(peasant, townhall),
-						peasant.getCargoType());
-				
-				Point goal = node.getGoal();
-				int estimatedCost = 99999;
-				int closestResourceID;
-				
-				if(hasWood) {
-					//generate and remove the remove list
-					ArrayList<Literal> toRemove = new ArrayList<Literal>();
-					int woodAmt = 0;
-					for(Literal lit: node.getStateLits()) {
-						if(lit.equals(new Has(peasantIds.get(0), ResourceType.WOOD, peasant.getCargoAmount()))) {
-							toRemove.add(lit);
-							woodAmt = ((Has)lit).getAmount();
-=======
 			//GotoResource
 			if(node.containsLit(new AtTownHall(peasantIds.get(0)))
 					&& !node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))
@@ -198,7 +178,6 @@ public class ForwardPlanner extends Agent {
 					for(Literal lit : node.getStateLits()) {
 						if(!lit.equals(new AtTownHall(peasantIds.get(0)))) { //remove list
 							literalsGold.add(lit);
->>>>>>> 6cb7a56c82cd13ead45aea35aaa36a41ca3a5b67
 						}
 					}
 					literalsGold.add(new AtResource(peasantIds.get(0), ResourceType.GOLD)); //add list
@@ -399,8 +378,42 @@ public class ForwardPlanner extends Agent {
 		
 		Map<Integer, Action> builder = new HashMap<Integer, Action>();
 		if(solution.peek() != null) {
-			//Action b = solution.poll().getToState().act(peasantIds.get(0));
-			//builder.put(peasantIds.get(0), b);
+			Action b = null;
+			Node poll = solution.poll();
+			String actString = poll.getToState().getClass().toString();
+			
+			if(actString.equals("class Deposit")) {	//TODO is this necessary? Just use GotoTownHall
+				b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDDEPOSIT, townhallIds.get(0));
+			} else if(actString.equals("class GotoTownHall")){
+				b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDDEPOSIT, townhallIds.get(0));
+			} else if(actString.equals("class GotoResource")) {
+				ResourceType resource = ((GotoResource)poll.getToState()).getResource();
+				
+				if(resource.equals(ResourceType.GOLD)) {
+					//goto nearest gold
+					//TODO change currentState to poll.getState() or something like that
+					UnitView peasant = currentState.getUnit(peasantIds.get(0));
+					int goldId = getClosestGoldID(new Point(peasant.getXPosition(), peasant.getYPosition()), currentState);
+//					
+//					ResourceView gold = currentState.getResourceNode(goldId);
+//					b = new LocatedAction(peasantIds.get(0), ActionType.COMPOUNDMOVE, gold.getXPosition(), gold.getYPosition());
+				
+					b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDGATHER, goldId);
+				
+				} else if(resource.equals(ResourceType.WOOD)) {
+					//goto nearest wood
+					//TODO change currentState to poll.getState() or something like that
+					UnitView peasant = currentState.getUnit(peasantIds.get(0));
+					int woodId = getClosestWoodID(new Point(peasant.getXPosition(), peasant.getYPosition()), currentState);
+					
+//					ResourceView wood = currentState.getResourceNode(woodId);
+//					b = new LocatedAction(peasantIds.get(0), ActionType.COMPOUNDMOVE, wood.getXPosition(), wood.getYPosition());
+					
+					b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDGATHER, woodId);
+				}
+				
+			}
+			builder.put(peasantIds.get(0), b);
 		}
 		return builder;
 	}
@@ -427,7 +440,6 @@ public class ForwardPlanner extends Agent {
 	}
 	
 	//TODO fix the heuristic
-	//
 	public int calculateHeuristicDistance(Node node, boolean hasResource, Point peasantLoc, Point townhallLoc, int neededResources) {
 		int dist = 0;
 //		if(neededResources > 0) {			
@@ -532,33 +544,6 @@ public class ForwardPlanner extends Agent {
 		}
 	}
 	
-<<<<<<< HEAD
-	public boolean areAdjacent(Node node, int objOneId, int objTwoId) {
-		for(Literal lit1 : node.getStateLits()) {
-			if(lit1.getClass().toString().equals("class At")) {
-				for(Literal lit2 : node.getStateLits()) {
-					if(lit2.getClass().toString().equals("class At")) {
-						
-						At at1 = (At)lit1;
-						At at2 = (At)lit2;
-						
-						if(at1.getObjectID() == objOneId
-								&& at2.getObjectID() == objTwoId) {
-							Point p1 = at1.getPosition();
-							Point p2 = at2.getPosition();
-							
-							if(Math.abs(p1.getX() - p2.getX()) <=1
-									&& Math.abs(p1.getY() - p2.getY()) <=1 ) {
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
-		return false;
-	}
-=======
 //	public boolean areAdjacent(Node node, int objOneId, int objTwoId) {
 //		for(Literal lit1 : node.getStateLits()) {
 //			if(lit1.getClass().toString().equals("class At")) {
@@ -584,7 +569,6 @@ public class ForwardPlanner extends Agent {
 //		}
 //		return false;
 //	}
->>>>>>> 6cb7a56c82cd13ead45aea35aaa36a41ca3a5b67
 	
 	private void printPlan() {
 		try {

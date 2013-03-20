@@ -15,7 +15,6 @@ public class Node implements Comparable<Object>{
 	 * @param stateLits - The state literals
 	 * @param costToNode - The total cost to get to the node
 	 * @param costToGoal - The estimated cost to the goal
-	 * @param peasantLoc - The location of the peasant
 	 */
 	public Node(Node parent, Act toState, ArrayList<Literal> stateLits, 
 			int costToNode, int costToGoal) {
