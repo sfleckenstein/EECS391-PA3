@@ -386,7 +386,7 @@ public class ForwardPlanner extends Agent {
 			Node poll = solution.poll();
 			String actString = poll.getToState().getClass().toString();
 			
-			if(actString.equals("class Deposit")) {	//TODO is this necessary? Just use GotoTownHall
+			if(actString.equals("class Deposit")) {	//TODO is this necessary? Just use GotoTownHall	
 				b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDDEPOSIT, townhallIds.get(0));
 			} else if(actString.equals("class GotoTownHall")){
 				b = new TargetedAction(peasantIds.get(0), ActionType.COMPOUNDDEPOSIT, townhallIds.get(0));
