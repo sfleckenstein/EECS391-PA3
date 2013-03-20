@@ -215,7 +215,7 @@ public class ForwardPlanner extends Agent {
 			}
 			
 			//Deposit Gold/Wood
-			if(hasResource && areAdjacent(true, node, peasantIds.get(0), townhallIds.get(0))) { //preconditions
+			if(hasResource && areAdjacent(node, peasantIds.get(0), townhallIds.get(0))) { //preconditions
 				peasant = node.getState().getUnit(peasantIds.get(0));
 				literals = new ArrayList<Literal>();
 				literals.addAll(node.getStateLits());
@@ -361,7 +361,6 @@ public class ForwardPlanner extends Agent {
 				Node n = new Node(nextState.getView(0), node, deposit, literals, 
 						node.getCostToNode() + 1, goal, estimatedCost);
 				
-				//TODO check that this contains method is executing properly (Node.equal()?)
 				if(!closed.contains(n)) {
 					open.add(n);
 				} else if (open.contains(n)){
@@ -850,37 +849,6 @@ public class ForwardPlanner extends Agent {
 	}
 	
 	public boolean areAdjacent(Node node, int objOneId, int objTwoId) {
-		for(Literal lit1 : node.getStateLits()) {
-			if(lit1.getClass().toString().equals("class At")) {
-				for(Literal lit2 : node.getStateLits()) {
-					if(lit2.getClass().toString().equals("class At")) {
-						
-						At at1 = (At)lit1;
-						At at2 = (At)lit2;
-						
-						if(at1.getObjectID() == objOneId
-								&& at2.getObjectID() == objTwoId) {
-							Point p1 = at1.getPosition();
-							Point p2 = at2.getPosition();
-							
-							if(Math.abs(p1.getX() - p2.getX()) <=1
-									&& Math.abs(p1.getY() - p2.getY()) <=1 ) {
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
-		return false;
-	}
-	
-	public boolean areAdjacent(boolean b, Node node, int objOneId, int objTwoId) {
-		Literal literal = node.getStateLits().get(11);
-		if(literal.getClass().toString().equals("class At")) {
-			Point p = ((At)literal).getPosition();
-			System.out.println(literal + ": " + p);
-		}
 		for(Literal lit1 : node.getStateLits()) {
 			if(lit1.getClass().toString().equals("class At")) {
 				for(Literal lit2 : node.getStateLits()) {
