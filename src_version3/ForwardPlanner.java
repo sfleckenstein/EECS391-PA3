@@ -198,7 +198,7 @@ public class ForwardPlanner extends Agent {
 					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, false, false);
 					
 					Node n = new Node(node, new GotoResource(peasantIds.get(0), ResourceType.GOLD),
-							literalsGold, node.getCostToNode() + 1, estimatedCost);
+							literalsGold, node.getCostToNode() + 50, estimatedCost);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -222,7 +222,7 @@ public class ForwardPlanner extends Agent {
 					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, false, false);
 					
 					Node n = new Node(node, new GotoResource(peasantIds.get(0), ResourceType.WOOD),
-							literalsWood, node.getCostToNode() + 1, estimatedCost);
+							literalsWood, node.getCostToNode() + 50, estimatedCost);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -254,7 +254,7 @@ public class ForwardPlanner extends Agent {
 				estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, true, true);
 
 				Node n = new Node(node, new GotoTownHall(peasantIds.get(0)),
-						literals, node.getCostToNode() + 1, estimatedCost);
+						literals, node.getCostToNode() + 50, estimatedCost);
 				
 				if(!closed.contains(n)) {
 					open.add(n);
@@ -286,7 +286,7 @@ public class ForwardPlanner extends Agent {
 					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, false, true);
 					
 					Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT),
-							literalsGold, node.getCostToNode() + 1, estimatedCost);
+							literalsGold, node.getCostToNode() + 50, estimatedCost);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -315,7 +315,7 @@ public class ForwardPlanner extends Agent {
 					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, false, true);
 					
 					Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT),
-							literalsWood, node.getCostToNode() + 1, estimatedCost);
+							literalsWood, node.getCostToNode() + 50, estimatedCost);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -343,7 +343,7 @@ public class ForwardPlanner extends Agent {
 					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, true, false);
 					
 					Node n = new Node(node, new Gather(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT),
-							literalsGold, node.getCostToNode() + 1, estimatedCost);
+							literalsGold, node.getCostToNode() + 50, estimatedCost);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -366,7 +366,7 @@ public class ForwardPlanner extends Agent {
 					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, true, false);
 					
 					Node n = new Node(node, new Gather(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT),
-							literalsWood, node.getCostToNode() + 1, estimatedCost);
+							literalsWood, node.getCostToNode() + 50, estimatedCost);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -454,17 +454,28 @@ public class ForwardPlanner extends Agent {
 	}
 	
 	public int heuristic(int neededGold, int neededWood, boolean hasResource, boolean atTownhall) {
-		int amountNeeded = neededGold + neededWood;
-		int dist = 0;
-		if(hasResource) {
-			dist++; //deposit action
-			amountNeeded -= GATHER_AMOUNT;
-			if(!atTownhall) {
-				dist++; //move to townhall
-			}
+//		int amountNeeded = neededGold + neededWood;
+//		int dist = 0;
+//		if(hasResource) {
+//			dist++; //deposit action
+//			amountNeeded -= GATHER_AMOUNT;
+//			if(!atTownhall) {
+//				dist++; //move to townhall
+//			}
+//		}
+//		dist += 4 * (amountNeeded / GATHER_AMOUNT);
+//		return dist;
+		
+		int heuristic = 0;
+		if(hasResource && atTownhall) {
+			heuristic += 100;
+		} else if(hasResource && !atTownhall) {
+			heuristic += 40;
+		} else if(!hasResource) {
+			heuristic -= 40;
 		}
-		dist += 4 * (amountNeeded / GATHER_AMOUNT);
-		return dist;
+		
+		return heuristic - neededGold - neededWood + (int)(Math.random() * 50);
 	}
 
 	private int getClosestWoodID(Point unit, StateView state) {
