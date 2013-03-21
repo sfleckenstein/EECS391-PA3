@@ -53,11 +53,7 @@ public class Node implements Comparable<Object>{
 		return stateLits;
 	}
 	
-//	/**
-//	 * 
-//	 * @param toFind - The literal you are searching for
-//	 * @return True if the node contains the queried literal.
-//	 */
+
 	public boolean containsLit(Literal toFind) {
 		String toFindClass = toFind.getClass().toString();
 		for(Literal stateLit : stateLits) {
@@ -82,44 +78,5 @@ public class Node implements Comparable<Object>{
 			return 1;
 		}
 	}
-	
-//	@Override
-//	public boolean equals(Object o) {
-//		Node n = (Node)o;
-//		if(
-//		return false;
-//	}
-
-//	public Point getUnitLoc(int unitID) {
-//		for(Literal lit : stateLits) {
-//			if(lit.getClass().toString().equals("class At")
-//					&& ((At)lit).getObjectID() == unitID) {
-//				return ((At)lit).getPosition();
-//			}
-//		}
-//		return null;
-//	}
-	
-//	public int getTownHallGold(int townhallID) {
-//		for(Literal lit : stateLits) {
-//			if(lit.getClass().toString().equals("class Has")
-//					&& ((Has)lit).getHolderID() == townhallID 
-//					&& ((Has)lit).getToHold() == ResourceType.GOLD) {
-//				return ((Has) lit).getAmount();
-//			}
-//		}
-//		return -1;
-//	}
-//	
-//	public int getTownHallWood(int townhallID) {
-//		for(Literal lit : stateLits) {
-//			if(lit.getClass().toString().equals("class Has")
-//					&& ((Has)lit).getHolderID() == townhallID 
-//					&& ((Has)lit).getToHold() == ResourceType.WOOD) {
-//				return ((Has) lit).getAmount();
-//			}
-//		}
-//		return -1;
-//	}
 
 }

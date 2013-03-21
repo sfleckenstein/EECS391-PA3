@@ -24,7 +24,7 @@ public class AtResource extends Literal {
 			return false;
 		}
 		AtResource a = (AtResource)o;
-		if(a.objectID == this.objectID && a.resource.equals(a.resource)) {
+		if(a.objectID == this.objectID && a.resource.equals(this.resource)) {
 			return true;
 		}
 		return false;
