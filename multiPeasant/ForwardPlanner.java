@@ -50,6 +50,7 @@ public class ForwardPlanner extends Agent {
 	private static final long serialVersionUID = -4047208702628325380L;
 	private static final Logger logger = Logger.getLogger(ForwardPlanner.class.getCanonicalName());
 	public static final int GATHER_AMOUNT = 100;
+	public static final int PEASANT_COST = 400;
 
 	private int step;
 	private int currentGoal;
@@ -110,6 +111,7 @@ public class ForwardPlanner extends Agent {
 		}
 		
 		//initial state
+		initLits.add(new ContainsPeasants(1));
 		initLits.add(new Has(townhallIds.get(0), ResourceType.GOLD, 0)); //town has no gold
 		initLits.add(new Has(townhallIds.get(0), ResourceType.WOOD, 0)); //town has no wood
 		initLits.add(new AtTownHall(peasantIds.get(0))); //peasant starts at the townhall
@@ -118,20 +120,7 @@ public class ForwardPlanner extends Agent {
 		goalLits.add(new Has(townhallIds.get(0), ResourceType.GOLD, targetGold));
 		goalLits.add(new Has(townhallIds.get(0), ResourceType.WOOD, targetWood));
 		
-		int goalGoldAmt = 0;
-		int goalWoodAmt = 0;
-		for(Literal goalLit : goalLits) { 				
-			if(goalLit.getClass().toString().equals("class Has")
-					&& ((Has)goalLit).getObjectID() == townhallIds.get(0)) {
-				if(((Has)goalLit).getResource().equals(ResourceType.GOLD)) {
-					goalGoldAmt = ((Has)goalLit).getAmount();
-				} else if(((Has)goalLit).getResource().equals(ResourceType.WOOD)) {
-					goalWoodAmt = ((Has)goalLit).getAmount();
-				}
-			}
-		}
-		
-		int estimatedCost = heuristic(goalGoldAmt, goalWoodAmt, false, false);
+		int estimatedCost = heuristic(targetGold, targetWood, false, false);
 		
 		Node root = new Node(null, null, initLits, 0, estimatedCost);
 		
@@ -174,148 +163,88 @@ public class ForwardPlanner extends Agent {
 						&& ((Has)literal).getObjectID() == townhallIds.get(0)) {
 					if(((Has)literal).getResource().equals(ResourceType.GOLD)) {
 						neededGold = ((Has)literal).getAmount();
-						if(neededGold < goalGoldAmt) needGold = true;
+						if(neededGold < targetGold) needGold = true;
 					} else if(((Has)literal).getResource().equals(ResourceType.WOOD)) {
 						neededWood = ((Has)literal).getAmount();
-						if(neededWood < goalWoodAmt) needWood = true;
+						if(neededWood < targetWood) needWood = true;
 					}
 				}
 			}
 			
-			//GotoResource
-			if(node.containsLit(new AtTownHall(peasantIds.get(0)))
-					&& !node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))
-					&& !node.containsLit(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT))) { //preconditions
-				if(needGold) {
-					ArrayList<Literal> literalsGold = new ArrayList<Literal>();
-					for(Literal lit : node.getStateLits()) {
-						if(!lit.equals(new AtTownHall(peasantIds.get(0)))) { //remove list
-							literalsGold.add(lit);
-						}
-					}
-					literalsGold.add(new AtResource(peasantIds.get(0), ResourceType.GOLD)); //add list
-					
-					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, false, false);
-					
-					Node n = new Node(node, new GotoResource(peasantIds.get(0), ResourceType.GOLD),
-							literalsGold, node.getCostToNode() + 1, estimatedCost);
-					
-					if(!closed.contains(n)) {
-						open.add(n);
-					} else if (open.contains(n)){
-						Node toCompare = open.get(n);
-						if(toCompare.getCostToNode() > n.getCostToNode()) {
-							toCompare.setCostToNode(n.getCostToNode());
-							toCompare.setParentNode(n.getParentNode());
-						}
-					}
-				}
-				if(needWood) {
-					ArrayList<Literal> literalsWood = new ArrayList<Literal>();
-					for(Literal lit : node.getStateLits()) {
-						if(!lit.equals(new AtTownHall(peasantIds.get(0)))) { //remove list
-							literalsWood.add(lit);
-						}
-					}
-					literalsWood.add(new AtResource(peasantIds.get(0), ResourceType.WOOD)); //add list
-					
-					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, false, false);
-					
-					Node n = new Node(node, new GotoResource(peasantIds.get(0), ResourceType.WOOD),
-							literalsWood, node.getCostToNode() + 1, estimatedCost);
-					
-					if(!closed.contains(n)) {
-						open.add(n);
-					} else if (open.contains(n)){
-						Node toCompare = open.get(n);
-						if(toCompare.getCostToNode() > n.getCostToNode()) {
-							toCompare.setCostToNode(n.getCostToNode());
-							toCompare.setParentNode(n.getParentNode());
-						}
-					}
-				}
-			}
-			
-			//GotoTownHall
-			if((node.containsLit(new AtResource(peasantIds.get(0), ResourceType.GOLD))
-					|| node.containsLit(new AtResource(peasantIds.get(0), ResourceType.WOOD)))
-					&& (node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))
-					|| node.containsLit(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT)))) { //preconditions
-				ArrayList<Literal> literals = new ArrayList<Literal>();
-				for(Literal lit : node.getStateLits()) {
-					if(!lit.equals(new AtResource(peasantIds.get(0), ResourceType.GOLD))
-							&& !lit.equals(new AtResource(peasantIds.get(0), ResourceType.WOOD))) { //remove list
-						literals.add(lit);
-					}
-				}
-				
-				literals.add(new AtTownHall(peasantIds.get(0)));
-				
-				estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, true, true);
-
-				Node n = new Node(node, new GotoTownHall(peasantIds.get(0)),
-						literals, node.getCostToNode() + 1, estimatedCost);
-				
-				if(!closed.contains(n)) {
-					open.add(n);
-				} else if (open.contains(n)){
-					Node toCompare = open.get(n);
-					if(toCompare.getCostToNode() > n.getCostToNode()) {
-						toCompare.setCostToNode(n.getCostToNode());
-						toCompare.setParentNode(n.getParentNode());
-					}
-				}
-			}
-			
-			//Deposit
-			if(node.containsLit(new AtTownHall(peasantIds.get(0)))) {
-				if(node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))) { //preconditions
-					ArrayList<Literal> literalsGold = new ArrayList<Literal>();
-					for(Literal lit : node.getStateLits()) {
-						if(!lit.equals(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))) { //remove list
-							if(lit.getClass().toString().equals("class Has")
-									&& ((Has)lit).getObjectID() == townhallIds.get(0)
-									&& ((Has)lit).getResource().equals(ResourceType.GOLD)) {
-								literalsGold.add(new Has(townhallIds.get(0), ResourceType.GOLD, ((Has)lit).getAmount() + GATHER_AMOUNT));
-							} else {
+			if(node.containsLit(new ContainsPeasants(1))) { //only one peasant		
+				//GotoResource
+				if(node.containsLit(new AtTownHall(peasantIds.get(0)))
+						&& !node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))
+						&& !node.containsLit(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT))) { //preconditions
+					if(needGold) {
+						ArrayList<Literal> literalsGold = new ArrayList<Literal>();
+						for(Literal lit : node.getStateLits()) {
+							if(!lit.equals(new AtTownHall(peasantIds.get(0)))) { //remove list
 								literalsGold.add(lit);
 							}
 						}
-					}
-					
-					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, false, true);
-					
-					Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT),
-							literalsGold, node.getCostToNode() + 1, estimatedCost);
-					
-					if(!closed.contains(n)) {
-						open.add(n);
-					} else if (open.contains(n)){
-						Node toCompare = open.get(n);
-						if(toCompare.getCostToNode() > n.getCostToNode()) {
-							toCompare.setCostToNode(n.getCostToNode());
-							toCompare.setParentNode(n.getParentNode());
-						}
-					}
-				}
-				if(node.containsLit(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT))) { //preconditions
-					ArrayList<Literal> literalsWood = new ArrayList<Literal>();
-					for(Literal lit : node.getStateLits()) {
-						if(!lit.equals(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT))) { //remove list
-							if(lit.getClass().toString().equals("class Has")
-									&& ((Has)lit).getObjectID() == townhallIds.get(0)
-									&& ((Has)lit).getResource().equals(ResourceType.WOOD)) {
-								literalsWood.add(new Has(townhallIds.get(0), ResourceType.WOOD, ((Has)lit).getAmount() + GATHER_AMOUNT));
-							} else {
-								literalsWood.add(lit);
+						literalsGold.add(new AtResource(peasantIds.get(0), ResourceType.GOLD)); //add list
+						
+						estimatedCost = heuristic(targetGold - neededGold, targetWood - neededWood, false, false);
+						
+						Node n = new Node(node, new GotoResource(peasantIds.get(0), ResourceType.GOLD),
+								literalsGold, node.getCostToNode() + 1, estimatedCost);
+						
+						if(!closed.contains(n)) {
+							open.add(n);
+						} else if (open.contains(n)){
+							Node toCompare = open.get(n);
+							if(toCompare.getCostToNode() > n.getCostToNode()) {
+								toCompare.setCostToNode(n.getCostToNode());
+								toCompare.setParentNode(n.getParentNode());
 							}
 						}
 					}
+					if(needWood) {
+						ArrayList<Literal> literalsWood = new ArrayList<Literal>();
+						for(Literal lit : node.getStateLits()) {
+							if(!lit.equals(new AtTownHall(peasantIds.get(0)))) { //remove list
+								literalsWood.add(lit);
+							}
+						}
+						literalsWood.add(new AtResource(peasantIds.get(0), ResourceType.WOOD)); //add list
+						
+						estimatedCost = heuristic(targetGold - neededGold, targetWood - neededWood, false, false);
+						
+						Node n = new Node(node, new GotoResource(peasantIds.get(0), ResourceType.WOOD),
+								literalsWood, node.getCostToNode() + 1, estimatedCost);
+						
+						if(!closed.contains(n)) {
+							open.add(n);
+						} else if (open.contains(n)){
+							Node toCompare = open.get(n);
+							if(toCompare.getCostToNode() > n.getCostToNode()) {
+								toCompare.setCostToNode(n.getCostToNode());
+								toCompare.setParentNode(n.getParentNode());
+							}
+						}
+					}
+				}
+				
+				//GotoTownHall
+				if((node.containsLit(new AtResource(peasantIds.get(0), ResourceType.GOLD))
+						|| node.containsLit(new AtResource(peasantIds.get(0), ResourceType.WOOD)))
+						&& (node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))
+								|| node.containsLit(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT)))) { //preconditions
+					ArrayList<Literal> literals = new ArrayList<Literal>();
+					for(Literal lit : node.getStateLits()) {
+						if(!lit.equals(new AtResource(peasantIds.get(0), ResourceType.GOLD))
+								&& !lit.equals(new AtResource(peasantIds.get(0), ResourceType.WOOD))) { //remove list
+							literals.add(lit);
+						}
+					}
 					
-					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, false, true);
+					literals.add(new AtTownHall(peasantIds.get(0)));
 					
-					Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT),
-							literalsWood, node.getCostToNode() + 1, estimatedCost);
+					estimatedCost = heuristic(targetGold - neededGold, targetWood - neededWood, true, true);
+					
+					Node n = new Node(node, new GotoTownHall(peasantIds.get(0)),
+							literals, node.getCostToNode() + 1, estimatedCost);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -327,46 +256,151 @@ public class ForwardPlanner extends Agent {
 						}
 					}
 				}
-			}
-			
-			//Gather
-			if(!node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))
-					&& !node.containsLit(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT))) {
-				if(node.containsLit(new AtResource(peasantIds.get(0), ResourceType.GOLD))) { //preconditions
-					ArrayList<Literal> literalsGold = new ArrayList<Literal>();
-					for(Literal lit : node.getStateLits()) {
+				
+				//Deposit
+				if(node.containsLit(new AtTownHall(peasantIds.get(0)))) {
+					if(node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))) { //preconditions
+						ArrayList<Literal> literalsGold = new ArrayList<Literal>();
+						for(Literal lit : node.getStateLits()) {
+							if(!lit.equals(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))) { //remove list
+								if(lit.getClass().toString().equals("class Has")
+										&& ((Has)lit).getObjectID() == townhallIds.get(0)
+										&& ((Has)lit).getResource().equals(ResourceType.GOLD)) {
+									literalsGold.add(new Has(townhallIds.get(0), ResourceType.GOLD, ((Has)lit).getAmount() + GATHER_AMOUNT));
+								} else {
+									literalsGold.add(lit);
+								}
+							}
+						}
+						
+						estimatedCost = heuristic(targetGold - neededGold, targetWood - neededWood, false, true);
+						
+						Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT),
+								literalsGold, node.getCostToNode() + 1, estimatedCost);
+						
+						if(!closed.contains(n)) {
+							open.add(n);
+						} else if (open.contains(n)){
+							Node toCompare = open.get(n);
+							if(toCompare.getCostToNode() > n.getCostToNode()) {
+								toCompare.setCostToNode(n.getCostToNode());
+								toCompare.setParentNode(n.getParentNode());
+							}
+						}
+					}
+					if(node.containsLit(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT))) { //preconditions
+						ArrayList<Literal> literalsWood = new ArrayList<Literal>();
+						for(Literal lit : node.getStateLits()) {
+							if(!lit.equals(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT))) { //remove list
+								if(lit.getClass().toString().equals("class Has")
+										&& ((Has)lit).getObjectID() == townhallIds.get(0)
+										&& ((Has)lit).getResource().equals(ResourceType.WOOD)) {
+									literalsWood.add(new Has(townhallIds.get(0), ResourceType.WOOD, ((Has)lit).getAmount() + GATHER_AMOUNT));
+								} else {
+									literalsWood.add(lit);
+								}
+							}
+						}
+						
+						estimatedCost = heuristic(targetGold - neededGold, targetWood - neededWood, false, true);
+						
+						Node n = new Node(node, new Deposit(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT),
+								literalsWood, node.getCostToNode() + 1, estimatedCost);
+						
+						if(!closed.contains(n)) {
+							open.add(n);
+						} else if (open.contains(n)){
+							Node toCompare = open.get(n);
+							if(toCompare.getCostToNode() > n.getCostToNode()) {
+								toCompare.setCostToNode(n.getCostToNode());
+								toCompare.setParentNode(n.getParentNode());
+							}
+						}
+					}
+				}
+				
+				//Gather
+				if(!node.containsLit(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT))
+						&& !node.containsLit(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT))) {
+					if(node.containsLit(new AtResource(peasantIds.get(0), ResourceType.GOLD))) { //preconditions
+						ArrayList<Literal> literalsGold = new ArrayList<Literal>();
+						for(Literal lit : node.getStateLits()) {
 							literalsGold.add(lit);
-					}
-					
-					literalsGold.add(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT)); //add list
-					
-					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, true, false);
-					
-					Node n = new Node(node, new Gather(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT),
-							literalsGold, node.getCostToNode() + 1, estimatedCost);
-					
-					if(!closed.contains(n)) {
-						open.add(n);
-					} else if (open.contains(n)){
-						Node toCompare = open.get(n);
-						if(toCompare.getCostToNode() > n.getCostToNode()) {
-							toCompare.setCostToNode(n.getCostToNode());
-							toCompare.setParentNode(n.getParentNode());
+						}
+						
+						literalsGold.add(new Has(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT)); //add list
+						
+						estimatedCost = heuristic(targetGold - neededGold, targetWood - neededWood, true, false);
+						
+						Node n = new Node(node, new Gather(peasantIds.get(0), ResourceType.GOLD, GATHER_AMOUNT),
+								literalsGold, node.getCostToNode() + 1, estimatedCost);
+						
+						if(!closed.contains(n)) {
+							open.add(n);
+						} else if (open.contains(n)){
+							Node toCompare = open.get(n);
+							if(toCompare.getCostToNode() > n.getCostToNode()) {
+								toCompare.setCostToNode(n.getCostToNode());
+								toCompare.setParentNode(n.getParentNode());
+							}
 						}
 					}
-				}
-				if(node.containsLit(new AtResource(peasantIds.get(0), ResourceType.WOOD))) { //preconditions
-					ArrayList<Literal> literalsWood = new ArrayList<Literal>();
-					for(Literal lit : node.getStateLits()) {
+					if(node.containsLit(new AtResource(peasantIds.get(0), ResourceType.WOOD))) { //preconditions
+						ArrayList<Literal> literalsWood = new ArrayList<Literal>();
+						for(Literal lit : node.getStateLits()) {
 							literalsWood.add(lit);
+						}
+						
+						literalsWood.add(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT)); //add list
+						
+						estimatedCost = heuristic(targetGold - neededGold, targetWood - neededWood, true, false);
+						
+						Node n = new Node(node, new Gather(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT),
+								literalsWood, node.getCostToNode() + 1, estimatedCost);
+						
+						if(!closed.contains(n)) {
+							open.add(n);
+						} else if (open.contains(n)){
+							Node toCompare = open.get(n);
+							if(toCompare.getCostToNode() > n.getCostToNode()) {
+								toCompare.setCostToNode(n.getCostToNode());
+								toCompare.setParentNode(n.getParentNode());
+							}
+						}
+					}
+				}
+				
+				//BuildPeasant
+				boolean enoughGold = false;
+				for(int i = PEASANT_COST; i < targetGold; i += 100) {
+					if(node.containsLit(new Has(townhallIds.get(0), ResourceType.GOLD, i))) {
+						enoughGold = true;
+						break;
+					}
+				}
+				
+				if(enoughGold) { //preconditions
+					ArrayList<Literal> literalsBuild = new ArrayList<Literal>();
+					for(Literal lit : node.getStateLits()) {
+						if(!lit.equals(new ContainsPeasants(1))) { //remove list
+							if(lit.getClass().toString().equals("class Has")
+									&& ((Has)lit).getObjectID() == townhallIds.get(0)
+									&& ((Has)lit).getResource().equals(ResourceType.GOLD)) {
+								literalsBuild.add(new Has(townhallIds.get(0), ResourceType.GOLD, ((Has)lit).getAmount() - PEASANT_COST));
+							} else {
+								literalsBuild.add(lit);
+							}
+						} else {
+							((ContainsPeasants)lit).setNumPeasants(2); //add list
+						}
 					}
 					
-					literalsWood.add(new Has(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT)); //add list
+					//TODO get the new peasantID!!!!
+//					literalsBuild.add(new AtTownHall(peasantIds.get(1)));
 					
-					estimatedCost = heuristic(goalGoldAmt - neededGold, goalWoodAmt - neededWood, true, false);
+					estimatedCost = heuristic(targetGold - neededGold, targetWood - neededWood, false, false);//TODO fix heuristic function
 					
-					Node n = new Node(node, new Gather(peasantIds.get(0), ResourceType.WOOD, GATHER_AMOUNT),
-							literalsWood, node.getCostToNode() + 1, estimatedCost);
+					Node n = new Node(node, new BuildPeasant(), literalsBuild, node.getCostToNode() + 1, estimatedCost);
 					
 					if(!closed.contains(n)) {
 						open.add(n);
@@ -378,19 +412,10 @@ public class ForwardPlanner extends Agent {
 						}
 					}
 				}
-			}
-			
-			//build peasant
-			boolean enoughGold = false;
-			for(int i = 400; i < targetGold; i += 100) {
-				if(node.containsLit(new Has(townhallIds.get(0), ResourceType.GOLD, i))) {
-					enoughGold = true;
-					break;
-				}
-			}
-			
-			if(enoughGold && peasantIds.size() < 3) {
-				BuildPeasant build = new BuildPeasant();
+			} else if(node.containsLit(new ContainsPeasants(2))) { //two peasants
+				
+			} else if(node.containsLit(new ContainsPeasants(3))){ //three peasants
+				
 			}
 		}
 		return middleStep(newState, stateHistory);
