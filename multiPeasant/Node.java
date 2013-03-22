@@ -16,8 +16,7 @@ public class Node implements Comparable<Object>{
 	 * @param costToNode - The total cost to get to the node
 	 * @param costToGoal - The estimated cost to the goal
 	 */
-	public Node(Node parent, Act toState, ArrayList<Literal> stateLits, 
-			int costToNode, int costToGoal) {
+	public Node(Node parent, Act toState, ArrayList<Literal> stateLits, int costToNode, int costToGoal) {
 		this.parent = parent;
 		this.toState = toState;
 		this.stateLits = stateLits;
@@ -45,6 +44,10 @@ public class Node implements Comparable<Object>{
 		return costToGoal;
 	}
 	
+	public void setCostToGoal(int costToGoal) {
+		this.costToGoal = costToGoal;
+	}
+	
 	public Act getToState() {
 		return toState;
 	}
@@ -52,7 +55,6 @@ public class Node implements Comparable<Object>{
 	public ArrayList<Literal> getStateLits() {
 		return stateLits;
 	}
-	
 
 	public boolean containsLit(Literal toFind) {
 		String toFindClass = toFind.getClass().toString();
@@ -70,13 +72,35 @@ public class Node implements Comparable<Object>{
 	@Override
 	public int compareTo(Object o) {
 		Node n = (Node)o;
-		if(this.costToNode + this.costToNode < n.costToNode + n.costToNode) {
+		if(this.costToNode + this.costToGoal < n.costToNode + n.costToGoal) {
 			return -1;
-		} else if(this.costToNode + this.costToNode == n.costToNode + n.costToNode) {
+		} else if(this.costToNode + this.costToGoal == n.costToNode + n.costToGoal) {
 			return 0;
 		} else {
 			return 1;
 		}
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null || !obj.getClass().toString().equals("class Node")) {
+			return false;
+		}
+		Node n = (Node)obj;
+		if(n.stateLits.size() != this.stateLits.size())  {
+			return false;
+		}
+		for(Literal lit : n.stateLits) {
+			if(!this.containsLit(lit)) {
+				return false;
+			}
+		}
+		for(Literal lit : this.stateLits) {
+			if(!n.containsLit(lit)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

@@ -25,19 +25,19 @@ public class GotoResource2 extends Act{
 		return resource;
 	}
 	
-//	public String getResourceString() {
-//		String str;
-//		switch(resource) {
-//		case GOLD:
-//			str = "GOLD MINE";
-//			break;
-//		case WOOD:
-//			str = "FOREST";
-//			break;
-//		default:
-//			str = "";
-//		}
-//		return str;
-//	}
+	public String getResourceString() {
+		String str;
+		switch(resource) {
+		case GOLD:
+			str = "GOLD MINE";
+			break;
+		case WOOD:
+			str = "FOREST";
+			break;
+		default:
+			str = "";
+		}
+		return str;
+	}
 
 }

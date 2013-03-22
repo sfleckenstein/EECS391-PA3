@@ -36,18 +36,18 @@ public class Gather3 extends Act {
 		return amount;
 	}
 	
-//	public String getResourceString() {
-//		String str;
-//		switch(resource) {
-//		case GOLD:
-//			str = "GOLD";
-//			break;
-//		case WOOD:
-//			str = "WOOD";
-//			break;
-//		default:
-//			str = "";
-//		}
-//		return str;
-//	}
+	public String getResourceString() {
+		String str;
+		switch(resource) {
+		case GOLD:
+			str = "GOLD";
+			break;
+		case WOOD:
+			str = "WOOD";
+			break;
+		default:
+			str = "";
+		}
+		return str;
+	}
 }

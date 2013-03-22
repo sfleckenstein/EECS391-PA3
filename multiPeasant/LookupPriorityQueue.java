@@ -4,6 +4,7 @@ public class LookupPriorityQueue<E> extends PriorityQueue<E> {
 
 	private static final long serialVersionUID = 1L;
 
+	@SuppressWarnings("unchecked")
 	public E get(E n) {
 		for(Object node : this) {
 			if(((E) node).equals(n)) {

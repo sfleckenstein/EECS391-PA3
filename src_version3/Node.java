@@ -70,9 +70,9 @@ public class Node implements Comparable<Object>{
 	@Override
 	public int compareTo(Object o) {
 		Node n = (Node)o;
-		if(this.costToNode + this.costToNode < n.costToNode + n.costToNode) {
+		if(this.costToGoal + this.costToNode < n.costToGoal + n.costToNode) {
 			return -1;
-		} else if(this.costToNode + this.costToNode == n.costToNode + n.costToNode) {
+		} else if(this.costToGoal + this.costToNode == n.costToGoal + n.costToNode) {
 			return 0;
 		} else {
 			return 1;

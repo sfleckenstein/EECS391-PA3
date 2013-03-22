@@ -16,7 +16,7 @@ public class Deposit extends Act {
 		return depositID;
 	}
 	
-	public ResourceType getResourcee() {
+	public ResourceType getResource() {
 		return resource;
 	}
 	
